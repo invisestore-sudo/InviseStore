@@ -1,0 +1,2069 @@
+<!doctype html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, maximum-scale=1" />
+    <meta name="theme-color" content="#0b1220" />
+    <meta name="description" content="App de hábitos e metas com gamificação." />
+    <title>Hábitos & Metas</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+    <script>
+      // Pre-paint dark mode to avoid flash
+      try {
+        const t = localStorage.getItem('theme');
+        const stripped = t ? t.replace(/^"|"$/g, '') : null;
+        const m = window.matchMedia('(prefers-color-scheme: dark)').matches;
+        if (stripped === 'dark' || ((stripped === null || stripped === 'system') && m)) {
+          document.documentElement.classList.add('dark');
+        }
+      } catch (e) {}
+    </script>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+      tailwind.config = {
+        darkMode: 'class',
+        theme: {
+          extend: {
+            colors: {
+              brand: {
+                50: '#eef9ff', 100: '#d9f1ff', 200: '#bbe7ff', 300: '#8bd8ff',
+                400: '#54bfff', 500: '#2ea0ff', 600: '#1a7df5', 700: '#1763dc',
+                800: '#1a51b1', 900: '#1c478b',
+              },
+            },
+            fontFamily: {
+              sans: ['Inter', 'system-ui', '-apple-system', 'Segoe UI', 'Roboto', 'sans-serif'],
+            },
+            keyframes: {
+              pop: {
+                '0%': { transform: 'scale(0.6)', opacity: '0' },
+                '60%': { transform: 'scale(1.15)', opacity: '1' },
+                '100%': { transform: 'scale(1)', opacity: '1' },
+              },
+              slideUp: {
+                '0%': { transform: 'translateY(16px)', opacity: '0' },
+                '100%': { transform: 'translateY(0)', opacity: '1' },
+              },
+            },
+            animation: {
+              pop: 'pop 280ms cubic-bezier(.2,.7,.3,1.4)',
+              slideUp: 'slideUp 240ms ease-out',
+            },
+          },
+        },
+      };
+    </script>
+    <style>
+      html { -webkit-tap-highlight-color: transparent; -webkit-text-size-adjust: 100%; }
+      body { font-family: Inter, system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif; font-feature-settings: 'cv02','cv03','cv04','cv11'; }
+      ::-webkit-scrollbar { width: 8px; height: 8px; }
+      ::-webkit-scrollbar-thumb { background: rgba(100,116,139,.4); border-radius: 8px; }
+      ::-webkit-scrollbar-track { background: transparent; }
+      input, select, textarea { font-size: 16px; }
+      @media (min-width: 640px) { input, select, textarea { font-size: 14px; } }
+    </style>
+    <script crossorigin src="https://unpkg.com/react@18.3.1/umd/react.production.min.js"></script>
+    <script crossorigin src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.production.min.js"></script>
+    <script src="https://unpkg.com/@babel/standalone@7.25.6/babel.min.js"></script>
+  </head>
+  <body class="bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 antialiased">
+
+<!-- ============================================================
+     INVISE GATE — login por chave única
+     ============================================================ -->
+<style>
+  #invise-gate { position: fixed; inset: 0; z-index: 99999; display: flex; align-items: center; justify-content: center; background: #0a0a0f; color: #f0f0f5; font-family: system-ui, -apple-system, Segoe UI, Roboto, sans-serif; padding: 20px; }
+  #invise-gate .ig-card { width: 100%; max-width: 420px; background: #13131e; border: 1px solid rgba(255,255,255,0.08); border-radius: 16px; padding: 28px; box-shadow: 0 20px 60px rgba(0,0,0,.4); }
+  #invise-gate h1 { margin: 0 0 6px; font-size: 22px; letter-spacing: -0.3px; }
+  #invise-gate h1 b { color: #6c63ff; }
+  #invise-gate p { margin: 0 0 18px; color: #9090a0; font-size: 14px; line-height: 1.5; }
+  #invise-gate input { width: 100%; background: #1a1a25; border: 1px solid rgba(255,255,255,0.08); color: #f0f0f5; border-radius: 10px; padding: 12px 14px; font-size: 15px; font-family: ui-monospace, Consolas, Menlo, monospace; letter-spacing: 1px; text-transform: uppercase; }
+  #invise-gate input:focus { outline: none; border-color: #6c63ff; }
+  #invise-gate button { width: 100%; margin-top: 12px; background: #6c63ff; color: #fff; border: 0; border-radius: 10px; padding: 12px; font-size: 15px; font-weight: 600; cursor: pointer; }
+  #invise-gate button:disabled { opacity: 0.6; cursor: wait; }
+  #invise-gate .ig-err { margin-top: 10px; padding: 10px 12px; background: rgba(239,68,68,0.1); border: 1px solid rgba(239,68,68,0.3); color: #fca5a5; border-radius: 8px; font-size: 13px; }
+  #invise-gate .ig-foot { margin-top: 18px; font-size: 12px; color: #9090a0; text-align: center; }
+  #invise-gate .ig-foot a { color: #6c63ff; text-decoration: none; }
+  body.invise-locked > :not(#invise-gate) { display: none !important; }
+</style>
+<div id="invise-gate">
+  <div class="ig-card">
+    <h1>Hábitos & <b>Metas</b></h1>
+    <p>Digite sua chave única para entrar. Você recebe a chave após a compra na <a href="https://invisestore.com" style="color:#6c63ff;">InviseStore</a>.</p>
+    <form id="ig-form" autocomplete="off">
+      <input id="ig-key" placeholder="INVS-XXXX-XXXX-XXXX" required maxlength="24" />
+      <button type="submit" id="ig-submit">Entrar</button>
+      <div id="ig-err" class="ig-err" style="display:none;"></div>
+    </form>
+    <div class="ig-foot">Não tem chave? <a href="https://invisestore.com">Comprar agora</a></div>
+  </div>
+</div>
+<script>
+(function() {
+  // === CONFIG: troque para a URL do seu backend em produção ===
+  var INVISE_API = window.INVISE_API || 'https://SEU-BACKEND.onrender.com';
+  var APP_NAME = 'habitos';
+  var LS_KEY = 'invise.key';
+  var PREFIX = 'hm.v1.';
+
+  document.body.classList.add('invise-locked');
+
+  function deviceId() {
+    var d = localStorage.getItem('invise.device');
+    if (!d) { d = 'd_' + Math.random().toString(36).slice(2) + Date.now().toString(36); localStorage.setItem('invise.device', d); }
+    return d;
+  }
+  function userIdFromKey(k) {
+    var h = 0; for (var i = 0; i < k.length; i++) h = ((h<<5)-h) + k.charCodeAt(i) | 0;
+    return 'invise-' + Math.abs(h).toString(36);
+  }
+  function ensureUserSession(key, email) {
+    var uid = userIdFromKey(key);
+    var usersRaw = localStorage.getItem(PREFIX + 'users');
+    var users = [];
+    try { users = usersRaw ? JSON.parse(usersRaw) : []; } catch (e) {}
+    if (!users.find(function(u) { return u.id === uid; })) {
+      users.push({
+        id: uid, name: (email && email.split('@')[0]) || 'Você',
+        email: email || (uid + '@invise.local'),
+        passwordHash: '', salt: '',
+        createdAt: new Date().toISOString(),
+        xp: 0, level: 1, badges: [],
+        preferences: { theme: 'system', weekStart: 1 }
+      });
+      localStorage.setItem(PREFIX + 'users', JSON.stringify(users));
+    }
+    localStorage.setItem(PREFIX + 'session', JSON.stringify(uid));
+  }
+  function unlock(key, email) {
+    window.__INVISE_KEY = key;
+    window.__INVISE_USER = userIdFromKey(key);
+    localStorage.setItem(LS_KEY, key);
+    ensureUserSession(key, email);
+    document.body.classList.remove('invise-locked');
+    var g = document.getElementById('invise-gate'); if (g) g.remove();
+  }
+  function showErr(msg) {
+    var e = document.getElementById('ig-err'); if (!e) return;
+    e.textContent = msg; e.style.display = 'block';
+  }
+  async function validate(key, silent) {
+    try {
+      var r = await fetch(INVISE_API + '/api/validate-key', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ key: key, app: APP_NAME, deviceId: deviceId() })
+      });
+      var data = await r.json();
+      return data && data.valid === true ? data : null;
+    } catch (e) {
+      if (silent) return 'offline';
+      throw new Error('Sem conexão com o servidor.');
+    }
+  }
+
+  // Auto-login se já validou antes
+  var saved = localStorage.getItem(LS_KEY);
+  if (saved) {
+    window.__INVISE_KEY = saved;
+    window.__INVISE_USER = userIdFromKey(saved);
+    ensureUserSession(saved, '');
+    document.body.classList.remove('invise-locked');
+    var g0 = document.getElementById('invise-gate'); if (g0) g0.remove();
+    validate(saved, true).then(function(res) {
+      if (res === 'offline' || res) return;
+      localStorage.removeItem(LS_KEY);
+      localStorage.removeItem(PREFIX + 'session');
+      alert('Sua chave foi revogada ou expirou. Faça login novamente.');
+      location.reload();
+    });
+    return;
+  }
+
+  document.getElementById('ig-form').addEventListener('submit', async function(ev) {
+    ev.preventDefault();
+    var btn = document.getElementById('ig-submit');
+    var input = document.getElementById('ig-key');
+    var key = (input.value || '').trim().toUpperCase();
+    if (!key) return;
+    btn.disabled = true; btn.textContent = 'Validando...';
+    document.getElementById('ig-err').style.display = 'none';
+    try {
+      var res = await validate(key, false);
+      if (!res) { showErr('Chave inválida, revogada ou para outro app.'); return; }
+      unlock(key, res.email);
+      location.reload();
+    } catch (e) {
+      showErr(e.message || 'Erro ao validar.');
+    } finally {
+      btn.disabled = false; btn.textContent = 'Entrar';
+    }
+  });
+})();
+</script>
+    <div id="root"></div>
+    <script type="text/babel" data-presets="react">
+/* ===========================================================
+   Hábitos & Metas — single-file build
+   Tudo rodando em um único HTML: React via CDN, Tailwind via Play CDN,
+   roteamento por hash próprio (sem react-router), persistência em localStorage,
+   PBKDF2 via Web Crypto, gráficos SVG próprios.
+   =========================================================== */
+
+const { useState, useEffect, useMemo, useCallback, useContext, createContext, useRef, Fragment } = React;
+
+/* ---------------- storage ---------------- */
+const PREFIX = 'hm.v1.';
+const Keys = {
+  users: PREFIX + 'users',
+  session: PREFIX + 'session',
+  habits: PREFIX + 'habits',
+  habitLogs: PREFIX + 'habitLogs',
+  goals: PREFIX + 'goals',
+  theme: 'theme',
+};
+function load(key, fallback) {
+  try {
+    const raw = localStorage.getItem(key);
+    if (raw == null) return fallback;
+    return JSON.parse(raw);
+  } catch { return fallback; }
+}
+function save(key, value) {
+  try { localStorage.setItem(key, JSON.stringify(value)); }
+  catch (e) { console.error('storage write failed', e); }
+}
+function removeKey(key) { localStorage.removeItem(key); }
+function uid() {
+  if (typeof crypto !== 'undefined' && 'randomUUID' in crypto) return crypto.randomUUID();
+  return 'id-' + Math.random().toString(36).slice(2) + Date.now().toString(36);
+}
+
+/* ---------------- date utils ---------------- */
+const todayKey = (d = new Date()) => formatYMD(d);
+function formatYMD(d) {
+  const y = d.getFullYear();
+  const m = String(d.getMonth() + 1).padStart(2, '0');
+  const day = String(d.getDate()).padStart(2, '0');
+  return `${y}-${m}-${day}`;
+}
+function parseYMD(s) {
+  const [y, m, d] = s.split('-').map(Number);
+  return new Date(y, (m || 1) - 1, d || 1);
+}
+function addDays(d, n) { const c = new Date(d); c.setDate(c.getDate() + n); return c; }
+function startOfDay(d) { const c = new Date(d); c.setHours(0, 0, 0, 0); return c; }
+function diffDays(a, b) { return Math.round((startOfDay(a).getTime() - startOfDay(b).getTime()) / 86400000); }
+function startOfWeek(d, weekStart = 1) {
+  const c = startOfDay(d);
+  const day = c.getDay();
+  const diff = (day - weekStart + 7) % 7;
+  c.setDate(c.getDate() - diff);
+  return c;
+}
+function lastNDays(n, end = new Date()) {
+  const out = [];
+  for (let i = n - 1; i >= 0; i--) out.push(formatYMD(addDays(end, -i)));
+  return out;
+}
+function relativeFromNow(iso) {
+  const target = new Date(iso);
+  const now = new Date();
+  const days = diffDays(target, now);
+  if (days === 0) return 'hoje';
+  if (days === 1) return 'amanhã';
+  if (days === -1) return 'ontem';
+  if (days > 0) return `em ${days} dias`;
+  return `há ${Math.abs(days)} dias`;
+}
+
+/* ---------------- auth ---------------- */
+const ITERATIONS = 150000;
+function bytesToHex(buf) {
+  return Array.from(new Uint8Array(buf)).map((b) => b.toString(16).padStart(2, '0')).join('');
+}
+function randomSalt() {
+  const a = new Uint8Array(16);
+  crypto.getRandomValues(a);
+  return bytesToHex(a.buffer);
+}
+async function hashPassword(password, saltHex) {
+  const enc = new TextEncoder();
+  const salt = new Uint8Array(saltHex.match(/.{2}/g).map((h) => parseInt(h, 16)));
+  const key = await crypto.subtle.importKey('raw', enc.encode(password), 'PBKDF2', false, ['deriveBits']);
+  const bits = await crypto.subtle.deriveBits(
+    { name: 'PBKDF2', salt, iterations: ITERATIONS, hash: 'SHA-256' },
+    key, 256
+  );
+  return bytesToHex(bits);
+}
+function listUsers() { return load(Keys.users, []); }
+function saveUsers(u) { save(Keys.users, u); }
+function findUserByEmail(email) {
+  return listUsers().find((u) => u.email.toLowerCase() === email.toLowerCase());
+}
+function getCurrentUserId() { return load(Keys.session, null); }
+function getCurrentUser() {
+  const id = getCurrentUserId();
+  if (!id) return null;
+  return listUsers().find((u) => u.id === id) || null;
+}
+function setSession(userId) { save(Keys.session, userId || null); }
+function updateUser(patch) {
+  const users = listUsers();
+  const idx = users.findIndex((u) => u.id === patch.id);
+  if (idx < 0) throw new Error('Usuário não encontrado');
+  const updated = { ...users[idx], ...patch };
+  users[idx] = updated;
+  saveUsers(users);
+  return updated;
+}
+async function registerUser({ name, email, password }) {
+  name = name.trim();
+  email = email.trim().toLowerCase();
+  if (!name) throw new Error('Informe seu nome');
+  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) throw new Error('E-mail inválido');
+  if (password.length < 6) throw new Error('A senha precisa de ao menos 6 caracteres');
+  if (findUserByEmail(email)) throw new Error('Já existe uma conta com este e-mail');
+  const salt = randomSalt();
+  const passwordHash = await hashPassword(password, salt);
+  const user = {
+    id: uid(), name, email, passwordHash, salt,
+    createdAt: new Date().toISOString(),
+    xp: 0, level: 1, badges: [],
+    preferences: { theme: 'system', weekStart: 1 },
+  };
+  const users = listUsers();
+  users.push(user);
+  saveUsers(users);
+  setSession(user.id);
+  return user;
+}
+async function loginUser(email, password) {
+  const user = findUserByEmail(email);
+  if (!user) throw new Error('E-mail ou senha inválidos');
+  const hash = await hashPassword(password, user.salt);
+  if (hash !== user.passwordHash) throw new Error('E-mail ou senha inválidos');
+  setSession(user.id);
+  return user;
+}
+function logoutUser() { setSession(null); }
+
+/* ---------------- habits domain ---------------- */
+function listHabits(userId) {
+  return load(Keys.habits, []).filter((h) => h.userId === userId && !h.archivedAt);
+}
+function listAllHabits(userId) {
+  return load(Keys.habits, []).filter((h) => h.userId === userId);
+}
+function writeHabits(all) { save(Keys.habits, all); }
+function createHabit(userId, input) {
+  const all = load(Keys.habits, []);
+  const h = { ...input, id: uid(), userId, createdAt: new Date().toISOString() };
+  all.push(h);
+  writeHabits(all);
+  return h;
+}
+function updateHabitFn(habit) {
+  const all = load(Keys.habits, []);
+  const idx = all.findIndex((h) => h.id === habit.id);
+  if (idx < 0) throw new Error('Hábito não encontrado');
+  all[idx] = habit;
+  writeHabits(all);
+  return habit;
+}
+function archiveHabit(id) {
+  const all = load(Keys.habits, []);
+  const idx = all.findIndex((h) => h.id === id);
+  if (idx < 0) return;
+  all[idx] = { ...all[idx], archivedAt: new Date().toISOString() };
+  writeHabits(all);
+}
+function deleteHabit(id) {
+  writeHabits(load(Keys.habits, []).filter((h) => h.id !== id));
+  save(Keys.habitLogs, load(Keys.habitLogs, []).filter((l) => l.habitId !== id));
+}
+function listLogs(userId) {
+  return load(Keys.habitLogs, []).filter((l) => l.userId === userId);
+}
+function isCompleted(habitId, dateKey) {
+  return load(Keys.habitLogs, []).some((l) => l.habitId === habitId && l.date === dateKey);
+}
+function toggleCompletion(userId, habitId, dateKey = todayKey()) {
+  const all = load(Keys.habitLogs, []);
+  const idx = all.findIndex((l) => l.habitId === habitId && l.date === dateKey);
+  if (idx >= 0) {
+    all.splice(idx, 1);
+    save(Keys.habitLogs, all);
+    return { added: false };
+  }
+  all.push({ id: uid(), userId, habitId, date: dateKey, createdAt: new Date().toISOString() });
+  save(Keys.habitLogs, all);
+  return { added: true };
+}
+function isScheduledOn(freq, date) {
+  if (freq.type === 'daily') return true;
+  if (freq.type === 'custom') return freq.weekdays.includes(date.getDay());
+  return true;
+}
+function expectedThisWeek(freq) {
+  if (freq.type === 'daily') return 7;
+  if (freq.type === 'weekly') return Math.max(1, Math.min(7, freq.timesPerWeek));
+  return freq.weekdays.length;
+}
+function currentStreak(habit, logs) {
+  if (habit.frequency.type === 'custom' && habit.frequency.weekdays.length === 0) return 0;
+  const set = new Set(logs.filter((l) => l.habitId === habit.id).map((l) => l.date));
+  let streak = 0;
+  let cursor = new Date();
+  for (let i = 0; i < 4000; i++) {
+    const scheduled = isScheduledOn(habit.frequency, cursor);
+    const key = formatYMD(cursor);
+    if (scheduled) {
+      if (set.has(key)) streak++;
+      else if (streak === 0 && key === todayKey()) {
+        cursor = addDays(cursor, -1);
+        continue;
+      } else break;
+    }
+    cursor = addDays(cursor, -1);
+  }
+  return streak;
+}
+function longestStreak(habit, logs) {
+  const dates = logs.filter((l) => l.habitId === habit.id).map((l) => l.date).sort();
+  if (dates.length === 0) return 0;
+  let best = 1, run = 1;
+  for (let i = 1; i < dates.length; i++) {
+    const prev = parseYMD(dates[i - 1]);
+    const cur = parseYMD(dates[i]);
+    const expected = formatYMD(addDays(prev, 1));
+    if (formatYMD(cur) === expected) { run++; if (run > best) best = run; }
+    else run = 1;
+  }
+  return best;
+}
+function completionsThisWeek(habit, logs, weekStart = 1) {
+  const start = startOfWeek(new Date(), weekStart);
+  const end = addDays(start, 7);
+  return logs.filter((l) => l.habitId === habit.id && parseYMD(l.date) >= start && parseYMD(l.date) < end).length;
+}
+function weeklyCompletionRatio(habit, logs, weekStart = 1) {
+  const expected = expectedThisWeek(habit.frequency);
+  if (expected === 0) return 0;
+  return Math.min(1, completionsThisWeek(habit, logs, weekStart) / expected);
+}
+
+/* ---------------- goals domain ---------------- */
+function listGoals(userId) { return load(Keys.goals, []).filter((g) => g.userId === userId); }
+function writeGoals(all) { save(Keys.goals, all); }
+function createGoal(userId, input) {
+  const all = load(Keys.goals, []);
+  const g = { ...input, id: uid(), userId, createdAt: new Date().toISOString() };
+  all.push(g);
+  writeGoals(all);
+  return g;
+}
+function updateGoalFn(goal) {
+  const all = load(Keys.goals, []);
+  const idx = all.findIndex((g) => g.id === goal.id);
+  if (idx < 0) throw new Error('Meta não encontrada');
+  all[idx] = goal;
+  writeGoals(all);
+  return goal;
+}
+function deleteGoal(id) { writeGoals(load(Keys.goals, []).filter((g) => g.id !== id)); }
+function progressOf(goal) {
+  if (goal.kind === 'numeric') {
+    const start = goal.startValue ?? 0;
+    const target = goal.targetValue ?? 0;
+    const cur = goal.currentValue ?? start;
+    if (target === start) return cur >= target ? 1 : 0;
+    const ratio = (cur - start) / (target - start);
+    return Math.max(0, Math.min(1, ratio));
+  }
+  const tasks = goal.subtasks ?? [];
+  if (tasks.length === 0) return 0;
+  return tasks.filter((t) => t.done).length / tasks.length;
+}
+
+/* ---------------- gamification ---------------- */
+const XP_PER_HABIT = 10;
+const XP_STREAK_BONUS = 2;
+const XP_GOAL_COMPLETE = 80;
+function xpForLevel(level) { return Math.round(100 * Math.pow(level, 1.5)); }
+function levelFromXp(xp) { let l = 1; while (xp >= xpForLevel(l + 1)) l++; return l; }
+function levelProgress(xp) {
+  const level = levelFromXp(xp);
+  const base = xpForLevel(level);
+  const next = xpForLevel(level + 1);
+  const into = xp - base;
+  const span = Math.max(1, next - base);
+  return { level, into, span, pct: Math.min(1, into / span) };
+}
+function awardXp(user, amount) {
+  const xp = Math.max(0, user.xp + amount);
+  const level = levelFromXp(xp);
+  return updateUser({ id: user.id, xp, level });
+}
+const ACHIEVEMENTS = [
+  { id: 'first_step', name: 'Primeiro passo', description: 'Complete um hábito pela primeira vez', emoji: '🌱', check: (c) => c.totalCompletions >= 1 },
+  { id: 'week_warrior', name: 'Guerreiro da semana', description: '7 dias consecutivos em qualquer hábito', emoji: '🔥', check: (c) => c.longestStreakAny >= 7 },
+  { id: 'month_master', name: 'Mestre do mês', description: '30 dias consecutivos em qualquer hábito', emoji: '🏅', check: (c) => c.longestStreakAny >= 30 },
+  { id: 'centurion', name: 'Centurião', description: '100 conclusões totais', emoji: '💯', check: (c) => c.totalCompletions >= 100 },
+  { id: 'goal_getter', name: 'Realizador', description: 'Conclua sua primeira meta', emoji: '🎯', check: (c) => c.goals.some((g) => g.completedAt) },
+  { id: 'goal_trio', name: 'Trio vencedor', description: 'Conclua 3 metas', emoji: '🏆', check: (c) => c.goals.filter((g) => g.completedAt).length >= 3 },
+  { id: 'collector', name: 'Colecionador', description: 'Tenha 5 hábitos ativos ao mesmo tempo', emoji: '📚', check: (c) => c.habits.filter((h) => !h.archivedAt).length >= 5 },
+  { id: 'level_5', name: 'Em ascensão', description: 'Alcance o nível 5', emoji: '⭐', check: (c) => c.user.level >= 5 },
+  { id: 'level_10', name: 'Imparável', description: 'Alcance o nível 10', emoji: '🌟', check: (c) => c.user.level >= 10 },
+];
+function evaluateAchievements(ctx) {
+  const owned = new Set(ctx.user.badges);
+  const unlocked = [];
+  for (const a of ACHIEVEMENTS) {
+    if (!owned.has(a.id) && a.check(ctx)) {
+      owned.add(a.id);
+      unlocked.push(a);
+    }
+  }
+  let user = ctx.user;
+  if (unlocked.length) user = updateUser({ id: ctx.user.id, badges: Array.from(owned) });
+  return { user, unlocked };
+}
+
+/* ---------------- mini hash router ---------------- */
+const RouterCtx = createContext(null);
+function parseHash() {
+  let h = window.location.hash.slice(1);
+  if (!h || h === '/') h = '/';
+  return h;
+}
+function navigate(to, opts = {}) {
+  if (to === -1) { window.history.back(); return; }
+  if (opts.replace) window.location.replace('#' + to);
+  else window.location.hash = to;
+}
+function useRoute() { return useContext(RouterCtx); }
+function HashRouter({ children }) {
+  const [path, setPath] = useState(parseHash());
+  useEffect(() => {
+    const onHash = () => setPath(parseHash());
+    window.addEventListener('hashchange', onHash);
+    return () => window.removeEventListener('hashchange', onHash);
+  }, []);
+  return <RouterCtx.Provider value={{ path, navigate }}>{children}</RouterCtx.Provider>;
+}
+function Link({ to, className, children, ...rest }) {
+  return (
+    <a
+      href={'#' + to}
+      onClick={(e) => { e.preventDefault(); navigate(to); }}
+      className={className}
+      {...rest}
+    >
+      {children}
+    </a>
+  );
+}
+function NavLink({ to, end, className, children, ...rest }) {
+  const { path } = useRoute();
+  const isActive = end ? path === to : path === to || path.startsWith(to + '/');
+  const cn = typeof className === 'function' ? className({ isActive }) : className;
+  return <Link to={to} className={cn} {...rest}>{children}</Link>;
+}
+// Match against a pattern like "/habits/:id" — returns params object or null.
+function matchRoute(pattern, path) {
+  const pp = pattern.split('/').filter(Boolean);
+  const xp = path.split('/').filter(Boolean);
+  if (pp.length !== xp.length) return null;
+  const params = {};
+  for (let i = 0; i < pp.length; i++) {
+    if (pp[i].startsWith(':')) params[pp[i].slice(1)] = decodeURIComponent(xp[i]);
+    else if (pp[i] !== xp[i]) return null;
+  }
+  return params;
+}
+
+/* ---------------- contexts ---------------- */
+const AuthContext = createContext(null);
+function AuthProvider({ children }) {
+  const [user, setUser] = useState(null);
+  const [ready, setReady] = useState(false);
+  const refresh = useCallback(() => setUser(getCurrentUser()), []);
+  useEffect(() => { refresh(); setReady(true); }, [refresh]);
+  const value = useMemo(() => ({
+    user, ready,
+    login: async (email, password) => { const u = await loginUser(email, password); setUser(u); },
+    register: async (name, email, password) => { const u = await registerUser({ name, email, password }); setUser(u); },
+    logout: () => { logoutUser(); setUser(null); },
+    refresh,
+  }), [user, ready, refresh]);
+  return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
+}
+function useAuth() { const v = useContext(AuthContext); if (!v) throw new Error('useAuth fora de AuthProvider'); return v; }
+
+const ThemeContext = createContext(null);
+function applyTheme(theme) {
+  const sysDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+  const resolved = theme === 'system' ? (sysDark ? 'dark' : 'light') : theme;
+  document.documentElement.classList.toggle('dark', resolved === 'dark');
+  return resolved;
+}
+function ThemeProvider({ children }) {
+  const [theme, setThemeState] = useState(() => load(Keys.theme, 'system'));
+  const [resolved, setResolved] = useState(() => applyTheme(theme));
+  useEffect(() => { setResolved(applyTheme(theme)); save(Keys.theme, theme); }, [theme]);
+  useEffect(() => {
+    if (theme !== 'system') return;
+    const mq = window.matchMedia('(prefers-color-scheme: dark)');
+    const onChange = () => setResolved(applyTheme('system'));
+    mq.addEventListener('change', onChange);
+    return () => mq.removeEventListener('change', onChange);
+  }, [theme]);
+  const value = useMemo(() => ({
+    theme, resolved,
+    setTheme: (t) => setThemeState(t),
+    toggle: () => setThemeState(resolved === 'dark' ? 'light' : 'dark'),
+  }), [theme, resolved]);
+  return <ThemeContext.Provider value={value}>{children}</ThemeContext.Provider>;
+}
+function useTheme() { const v = useContext(ThemeContext); if (!v) throw new Error('useTheme fora de ThemeProvider'); return v; }
+
+const ToastContext = createContext(null);
+function ToastProvider({ children }) {
+  const [items, setItems] = useState([]);
+  const push = useCallback((t) => {
+    const id = Date.now() + Math.random();
+    setItems((prev) => [...prev, { id, ...t }]);
+    setTimeout(() => setItems((prev) => prev.filter((x) => x.id !== id)), 3500);
+  }, []);
+  const value = useMemo(() => ({ push }), [push]);
+  return (
+    <ToastContext.Provider value={value}>
+      {children}
+      <div className="pointer-events-none fixed inset-x-0 bottom-24 z-50 flex flex-col items-center gap-2 px-4 sm:bottom-6">
+        {items.map((t) => (
+          <div key={t.id} className="pointer-events-auto w-full max-w-sm animate-slideUp rounded-2xl border border-slate-200/70 bg-white/95 px-4 py-3 shadow-lg backdrop-blur dark:border-slate-800/70 dark:bg-slate-900/95">
+            <div className="flex items-start gap-3">
+              <span className="text-2xl leading-none">{t.emoji ?? (t.tone === 'error' ? '⚠️' : t.tone === 'success' ? '✅' : '💡')}</span>
+              <div className="min-w-0 flex-1">
+                <div className="font-semibold">{t.title}</div>
+                {t.description && <div className="text-sm text-slate-600 dark:text-slate-400">{t.description}</div>}
+              </div>
+            </div>
+          </div>
+        ))}
+      </div>
+    </ToastContext.Provider>
+  );
+}
+function useToast() { const v = useContext(ToastContext); if (!v) throw new Error('useToast fora de ToastProvider'); return v; }
+
+const DataContext = createContext(null);
+function DataProvider({ children }) {
+  const { user, refresh: refreshAuth } = useAuth();
+  const toast = useToast();
+  const [habits, setHabits] = useState([]);
+  const [logs, setLogs] = useState([]);
+  const [goals, setGoals] = useState([]);
+
+  const reload = useCallback(() => {
+    if (!user) { setHabits([]); setLogs([]); setGoals([]); return; }
+    setHabits(listHabits(user.id));
+    setLogs(listLogs(user.id));
+    setGoals(listGoals(user.id));
+  }, [user]);
+  useEffect(() => { reload(); }, [reload]);
+
+  const checkAchievements = useCallback(() => {
+    if (!user) return;
+    const fresh = {
+      habits: listAllHabits(user.id),
+      logs: listLogs(user.id),
+      goals: listGoals(user.id),
+    };
+    const longestStreakAny = fresh.habits.reduce((m, h) => Math.max(m, longestStreak(h, fresh.logs)), 0);
+    const result = evaluateAchievements({
+      habits: fresh.habits, logs: fresh.logs, goals: fresh.goals,
+      user, longestStreakAny, totalCompletions: fresh.logs.length,
+    });
+    if (result.unlocked.length) {
+      refreshAuth();
+      for (const a of result.unlocked) {
+        toast.push({ title: 'Conquista desbloqueada!', description: `${a.name} — ${a.description}`, emoji: a.emoji, tone: 'success' });
+      }
+    }
+  }, [user, refreshAuth, toast]);
+
+  const toggleHabit = useCallback((habit, dateKey) => {
+    if (!user) return;
+    const { added } = toggleCompletion(user.id, habit.id, dateKey);
+    if (added) {
+      const allLogs = listLogs(user.id);
+      const streak = currentStreak(habit, allLogs);
+      const xp = XP_PER_HABIT + Math.min(20, streak * XP_STREAK_BONUS);
+      awardXp(user, xp);
+      refreshAuth();
+      toast.push({
+        title: `+${xp} XP`,
+        description: streak > 1 ? `Streak de ${streak} dias 🔥` : 'Hábito concluído',
+        emoji: habit.emoji, tone: 'success',
+      });
+    }
+    reload();
+    setTimeout(checkAchievements, 0);
+  }, [user, reload, refreshAuth, toast, checkAchievements]);
+
+  const saveHabit = useCallback((input) => {
+    if (!user) throw new Error('not auth');
+    let saved;
+    if (input.id) saved = updateHabitFn(input);
+    else { const { id, ...rest } = input; saved = createHabit(user.id, rest); }
+    reload();
+    setTimeout(checkAchievements, 0);
+    return saved;
+  }, [user, reload, checkAchievements]);
+
+  const saveGoalFn = useCallback((input) => {
+    if (!user) throw new Error('not auth');
+    let saved;
+    const wasComplete = input.id ? !!goals.find((g) => g.id === input.id)?.completedAt : false;
+    if (input.id) saved = updateGoalFn(input);
+    else { const { id, ...rest } = input; saved = createGoal(user.id, rest); }
+    if (saved.completedAt && !wasComplete) {
+      awardXp(user, XP_GOAL_COMPLETE);
+      refreshAuth();
+      toast.push({ title: `Meta concluída! +${XP_GOAL_COMPLETE} XP`, description: saved.title, emoji: '🎯', tone: 'success' });
+    }
+    reload();
+    setTimeout(checkAchievements, 0);
+    return saved;
+  }, [user, goals, reload, refreshAuth, toast, checkAchievements]);
+
+  useEffect(() => { if (user) setTimeout(checkAchievements, 0); }, [user, checkAchievements]);
+
+  const value = useMemo(() => ({
+    habits, logs, goals, reload, toggleHabit, saveHabit,
+    archiveHabit: (id) => { archiveHabit(id); reload(); },
+    deleteHabit: (id) => { deleteHabit(id); reload(); },
+    saveGoal: saveGoalFn,
+    updateGoal: (g) => saveGoalFn(g),
+    deleteGoal: (id) => { deleteGoal(id); reload(); },
+  }), [habits, logs, goals, reload, toggleHabit, saveHabit, saveGoalFn]);
+
+  return <DataContext.Provider value={value}>{children}</DataContext.Provider>;
+}
+function useData() { const v = useContext(DataContext); if (!v) throw new Error('useData fora de DataProvider'); return v; }
+
+/* ---------------- UI primitives ---------------- */
+const variants = {
+  primary: 'bg-brand-600 text-white hover:bg-brand-700 active:bg-brand-800 shadow-sm shadow-brand-600/30 disabled:bg-brand-600/50',
+  secondary: 'bg-slate-100 text-slate-900 hover:bg-slate-200 active:bg-slate-300 dark:bg-slate-800 dark:text-slate-100 dark:hover:bg-slate-700',
+  ghost: 'bg-transparent text-slate-700 hover:bg-slate-100 dark:text-slate-200 dark:hover:bg-slate-800',
+  danger: 'bg-rose-600 text-white hover:bg-rose-700 active:bg-rose-800',
+};
+function Button({ variant = 'primary', size = 'md', block, className = '', ...rest }) {
+  const sizes = {
+    sm: 'h-9 px-3 text-sm rounded-xl',
+    md: 'h-11 px-4 text-sm rounded-xl',
+    lg: 'h-12 px-5 text-base rounded-2xl',
+  };
+  return (
+    <button
+      {...rest}
+      className={`inline-flex select-none items-center justify-center gap-2 font-semibold transition-all duration-150 active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-60 ${sizes[size]} ${variants[variant]} ${block ? 'w-full' : ''} ${className}`}
+    />
+  );
+}
+function Input({ label, hint, error, className = '', id, ...rest }) {
+  const inputId = id ?? rest.name;
+  return (
+    <label className="block">
+      {label && <span className="mb-1.5 block text-sm font-medium text-slate-700 dark:text-slate-300">{label}</span>}
+      <input
+        id={inputId}
+        {...rest}
+        className={`h-11 w-full rounded-xl border bg-white px-3 text-sm shadow-sm outline-none transition focus:border-brand-500 focus:ring-2 focus:ring-brand-500/20 dark:bg-slate-900 ${
+          error ? 'border-rose-500 focus:border-rose-500 focus:ring-rose-500/20' : 'border-slate-200 dark:border-slate-700'
+        } ${className}`}
+      />
+      {error ? (
+        <span className="mt-1 block text-xs text-rose-600 dark:text-rose-400">{error}</span>
+      ) : hint ? (
+        <span className="mt-1 block text-xs text-slate-500 dark:text-slate-400">{hint}</span>
+      ) : null}
+    </label>
+  );
+}
+function Textarea({ label, className = '', ...rest }) {
+  return (
+    <label className="block">
+      {label && <span className="mb-1.5 block text-sm font-medium text-slate-700 dark:text-slate-300">{label}</span>}
+      <textarea
+        {...rest}
+        className={`min-h-[88px] w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm shadow-sm outline-none transition focus:border-brand-500 focus:ring-2 focus:ring-brand-500/20 dark:border-slate-700 dark:bg-slate-900 ${className}`}
+      />
+    </label>
+  );
+}
+function Card({ className = '', ...rest }) {
+  return <div {...rest} className={`rounded-2xl border border-slate-200/70 bg-white p-4 shadow-sm dark:border-slate-800/70 dark:bg-slate-900/80 ${className}`} />;
+}
+function SectionTitle({ children, action }) {
+  return (
+    <div className="mb-3 flex items-end justify-between">
+      <h2 className="text-lg font-bold tracking-tight">{children}</h2>
+      {action}
+    </div>
+  );
+}
+function EmptyState({ emoji, title, description, action }) {
+  return (
+    <div className="flex flex-col items-center justify-center rounded-2xl border border-dashed border-slate-300 bg-slate-50 px-6 py-12 text-center dark:border-slate-700 dark:bg-slate-900/40">
+      <div className="mb-3 text-4xl">{emoji}</div>
+      <div className="font-semibold">{title}</div>
+      {description && <p className="mt-1 max-w-sm text-sm text-slate-600 dark:text-slate-400">{description}</p>}
+      {action && <div className="mt-4">{action}</div>}
+    </div>
+  );
+}
+function Modal({ open, onClose, title, children, footer }) {
+  useEffect(() => {
+    if (!open) return;
+    const onKey = (e) => e.key === 'Escape' && onClose();
+    document.addEventListener('keydown', onKey);
+    document.body.style.overflow = 'hidden';
+    return () => { document.removeEventListener('keydown', onKey); document.body.style.overflow = ''; };
+  }, [open, onClose]);
+  if (!open) return null;
+  return (
+    <div className="fixed inset-0 z-40 flex items-end justify-center sm:items-center" role="dialog" aria-modal>
+      <div className="absolute inset-0 bg-slate-900/40 backdrop-blur-sm dark:bg-black/60" onClick={onClose} />
+      <div className="relative w-full max-w-lg animate-slideUp rounded-t-3xl bg-white shadow-2xl dark:bg-slate-900 sm:rounded-2xl">
+        <div className="flex items-center justify-between border-b border-slate-100 px-5 py-3 dark:border-slate-800">
+          <h3 className="text-base font-bold">{title}</h3>
+          <button onClick={onClose} aria-label="Fechar" className="grid h-9 w-9 place-items-center rounded-full text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-800">✕</button>
+        </div>
+        <div className="max-h-[70vh] overflow-y-auto px-5 py-4">{children}</div>
+        {footer && <div className="border-t border-slate-100 px-5 py-3 dark:border-slate-800">{footer}</div>}
+      </div>
+    </div>
+  );
+}
+function Confirm({ open, title, description, confirmLabel = 'Confirmar', onConfirm, onClose, destructive }) {
+  return (
+    <Modal
+      open={open}
+      onClose={onClose}
+      title={title}
+      footer={
+        <div className="flex justify-end gap-2">
+          <Button variant="ghost" onClick={onClose}>Cancelar</Button>
+          <Button variant={destructive ? 'danger' : 'primary'} onClick={() => { onConfirm(); onClose(); }}>
+            {confirmLabel}
+          </Button>
+        </div>
+      }
+    >
+      {description && <p className="text-sm text-slate-600 dark:text-slate-300">{description}</p>}
+    </Modal>
+  );
+}
+function Pill({ children, tone = 'slate' }) {
+  const tones = {
+    slate: 'bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-200',
+    brand: 'bg-brand-100 text-brand-800 dark:bg-brand-900/40 dark:text-brand-200',
+    amber: 'bg-amber-100 text-amber-800 dark:bg-amber-900/40 dark:text-amber-200',
+    emerald: 'bg-emerald-100 text-emerald-800 dark:bg-emerald-900/40 dark:text-emerald-200',
+    rose: 'bg-rose-100 text-rose-800 dark:bg-rose-900/40 dark:text-rose-200',
+  };
+  return <span className={`inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-xs font-medium ${tones[tone]}`}>{children}</span>;
+}
+const COLORS = ['#2ea0ff', '#7c3aed', '#10b981', '#f59e0b', '#ef4444', '#ec4899', '#06b6d4', '#84cc16'];
+const EMOJIS = ['✅','💧','🏃','📚','🧘','💪','🥗','🛌','💻','🎯','🎨','✍️','🧠','🎵','🌱','☀️','🦷','💊','🚴','📵'];
+
+/* ---------------- charts ---------------- */
+function ProgressRing({ value, size = 64, stroke = 6, color = '#2ea0ff', trackClassName = 'text-slate-200 dark:text-slate-800', children }) {
+  const r = (size - stroke) / 2;
+  const c = 2 * Math.PI * r;
+  const v = Math.max(0, Math.min(1, value));
+  return (
+    <div className="relative grid place-items-center" style={{ width: size, height: size }}>
+      <svg width={size} height={size} className="-rotate-90">
+        <circle cx={size / 2} cy={size / 2} r={r} fill="none" strokeWidth={stroke} className={trackClassName} stroke="currentColor" />
+        <circle cx={size / 2} cy={size / 2} r={r} fill="none" stroke={color} strokeWidth={stroke} strokeLinecap="round"
+          strokeDasharray={c} strokeDashoffset={c * (1 - v)}
+          style={{ transition: 'stroke-dashoffset 600ms cubic-bezier(.2,.7,.3,1)' }} />
+      </svg>
+      <div className="absolute inset-0 grid place-items-center text-sm font-semibold">{children}</div>
+    </div>
+  );
+}
+function Heatmap({ habits, logs, days = 84 }) {
+  const data = useMemo(() => {
+    const dates = lastNDays(days);
+    const counts = {};
+    for (const d of dates) counts[d] = 0;
+    for (const l of logs) if (l.date in counts) counts[l.date] += 1;
+    const max = Math.max(1, habits.length || 1);
+    return { dates, counts, max };
+  }, [habits, logs, days]);
+  const cols = Math.ceil(days / 7);
+  const cells = [];
+  for (let c = 0; c < cols; c++) {
+    for (let r = 0; r < 7; r++) {
+      const idx = c * 7 + r;
+      if (idx >= data.dates.length) continue;
+      const date = data.dates[idx];
+      cells.push({ date, count: data.counts[date] ?? 0 });
+    }
+  }
+  const intensity = (n) => {
+    if (n === 0) return 'bg-slate-100 dark:bg-slate-800/60';
+    const pct = n / data.max;
+    if (pct >= 1) return 'bg-brand-700';
+    if (pct >= 0.7) return 'bg-brand-600';
+    if (pct >= 0.4) return 'bg-brand-500';
+    return 'bg-brand-300 dark:bg-brand-700/60';
+  };
+  return (
+    <div className="flex gap-1 overflow-x-auto pb-1" aria-label="Mapa de calor">
+      {Array.from({ length: cols }).map((_, c) => (
+        <div key={c} className="flex flex-col gap-1">
+          {Array.from({ length: 7 }).map((__, r) => {
+            const idx = c * 7 + r;
+            if (idx >= cells.length) return <div key={r} className="h-3 w-3" />;
+            const cell = cells[idx];
+            return <div key={r} title={`${cell.date}: ${cell.count} concluído${cell.count === 1 ? '' : 's'}`} className={`h-3 w-3 rounded-sm ${intensity(cell.count)}`} />;
+          })}
+        </div>
+      ))}
+    </div>
+  );
+}
+function WeeklyBars({ logs, weekStart = 1 }) {
+  const data = useMemo(() => {
+    const start = startOfWeek(new Date(), weekStart);
+    const days = Array.from({ length: 7 }).map((_, i) => addDays(start, i));
+    const counts = days.map((d) => logs.filter((l) => l.date === formatYMD(d)).length);
+    const max = Math.max(1, ...counts);
+    const labels = days.map((d) => d.toLocaleDateString('pt-BR', { weekday: 'short' }).replace('.', '').slice(0, 3));
+    return { counts, max, labels };
+  }, [logs, weekStart]);
+  return (
+    <div className="grid grid-cols-7 items-end gap-1.5 px-1">
+      {data.counts.map((c, i) => {
+        const h = (c / data.max) * 100;
+        return (
+          <div key={i} className="flex flex-col items-center gap-1">
+            <div className="flex h-24 w-full items-end">
+              <div className="w-full rounded-t-md bg-gradient-to-t from-brand-600 to-brand-400 transition-all"
+                style={{ height: `${Math.max(c === 0 ? 4 : 8, h)}%`, opacity: c === 0 ? 0.25 : 1 }}
+                aria-label={`${data.labels[i]}: ${c}`} />
+            </div>
+            <div className="text-[10px] uppercase tracking-wide text-slate-500">{data.labels[i]}</div>
+            <div className="text-xs font-semibold">{c}</div>
+          </div>
+        );
+      })}
+    </div>
+  );
+}
+function LineChart({ series, height = 120, color = '#2ea0ff' }) {
+  const max = Math.max(1, ...series);
+  const w = 320;
+  const step = series.length > 1 ? w / (series.length - 1) : w;
+  const points = series.map((v, i) => `${i * step},${height - (v / max) * (height - 8) - 4}`).join(' ');
+  const area = `0,${height} ${points} ${w},${height}`;
+  return (
+    <svg viewBox={`0 0 ${w} ${height}`} className="h-32 w-full" preserveAspectRatio="none">
+      <defs>
+        <linearGradient id="lc" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stopColor={color} stopOpacity="0.4" />
+          <stop offset="100%" stopColor={color} stopOpacity="0" />
+        </linearGradient>
+      </defs>
+      <polygon points={area} fill="url(#lc)" />
+      <polyline points={points} fill="none" stroke={color} strokeWidth={2.5} strokeLinejoin="round" strokeLinecap="round" />
+    </svg>
+  );
+}
+
+/* ---------------- HabitCard / GoalCard ---------------- */
+function HabitCard({ habit, logs, dateKey }) {
+  const { toggleHabit } = useData();
+  const key = dateKey ?? todayKey();
+  const done = isCompleted(habit.id, key);
+  const streak = currentStreak(habit, logs);
+  const weekRatio = weeklyCompletionRatio(habit, logs);
+  const expected = expectedThisWeek(habit.frequency);
+  const freqLabel = habit.frequency.type === 'daily'
+    ? 'Diário'
+    : habit.frequency.type === 'weekly'
+    ? `${habit.frequency.timesPerWeek}× por semana`
+    : `${habit.frequency.weekdays.length} dias/sem`;
+  return (
+    <div className={`group relative overflow-hidden rounded-2xl border bg-white p-4 transition-all dark:bg-slate-900 ${done ? 'border-emerald-300 ring-1 ring-emerald-200 dark:border-emerald-700 dark:ring-emerald-900/40' : 'border-slate-200/70 dark:border-slate-800/70'}`}>
+      <div className="flex items-center gap-3">
+        <button onClick={() => toggleHabit(habit, key)} aria-pressed={done}
+          aria-label={done ? 'Desfazer conclusão' : 'Marcar como concluído'}
+          className={`relative grid h-12 w-12 flex-shrink-0 place-items-center rounded-2xl text-2xl transition-transform active:scale-90 ${done ? 'animate-pop bg-emerald-500 text-white shadow-lg shadow-emerald-500/30' : 'bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700'}`}
+          style={{ color: done ? undefined : habit.color }}>
+          {done ? '✓' : habit.emoji}
+        </button>
+        <Link to={`/habits/${habit.id}`} className="min-w-0 flex-1">
+          <div className="flex items-center gap-2">
+            <div className="truncate font-semibold">{habit.name}</div>
+            {streak > 0 && <Pill tone="amber">🔥 {streak}</Pill>}
+          </div>
+          <div className="mt-0.5 flex items-center gap-2 text-xs text-slate-500 dark:text-slate-400">
+            <span>{freqLabel}</span>
+            <span>•</span>
+            <span>esta semana: <strong className="text-slate-700 dark:text-slate-200">{Math.round(weekRatio * expected)}/{expected}</strong></span>
+          </div>
+        </Link>
+        <ProgressRing value={weekRatio} size={44} stroke={4} color={habit.color}>
+          <span className="text-[10px] font-bold">{Math.round(weekRatio * 100)}%</span>
+        </ProgressRing>
+      </div>
+    </div>
+  );
+}
+function GoalCard({ goal }) {
+  const p = progressOf(goal);
+  const done = !!goal.completedAt;
+  const meta = goal.kind === 'numeric'
+    ? `${goal.currentValue ?? goal.startValue ?? 0} / ${goal.targetValue ?? 0}${goal.unit ? ' ' + goal.unit : ''}`
+    : `${(goal.subtasks ?? []).filter((s) => s.done).length} / ${(goal.subtasks ?? []).length} tarefas`;
+  return (
+    <Link to={`/goals/${goal.id}`}
+      className={`flex items-center gap-3 rounded-2xl border bg-white p-4 transition-all hover:shadow-md dark:bg-slate-900 ${done ? 'border-emerald-300 ring-1 ring-emerald-200 dark:border-emerald-700 dark:ring-emerald-900/40' : 'border-slate-200/70 dark:border-slate-800/70'}`}>
+      <div className="grid h-12 w-12 flex-shrink-0 place-items-center rounded-2xl text-2xl" style={{ backgroundColor: goal.color + '22', color: goal.color }}>
+        {goal.emoji}
+      </div>
+      <div className="min-w-0 flex-1">
+        <div className="flex items-center gap-2">
+          <div className="truncate font-semibold">{goal.title}</div>
+          {done && <Pill tone="emerald">✓ concluída</Pill>}
+        </div>
+        <div className="mt-1 flex items-center gap-2 text-xs text-slate-500 dark:text-slate-400">
+          <span>{meta}</span>
+          {goal.deadline && (<><span>•</span><span>{relativeFromNow(goal.deadline)}</span></>)}
+        </div>
+        <div className="mt-2 h-1.5 w-full overflow-hidden rounded-full bg-slate-100 dark:bg-slate-800">
+          <div className="h-full rounded-full transition-all duration-700" style={{ width: `${p * 100}%`, backgroundColor: goal.color }} />
+        </div>
+      </div>
+      <ProgressRing value={p} size={48} stroke={5} color={goal.color}>
+        <span className="text-[10px] font-bold">{Math.round(p * 100)}%</span>
+      </ProgressRing>
+    </Link>
+  );
+}
+
+/* ---------------- HabitForm / GoalForm ---------------- */
+const WEEKDAYS = ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb'];
+function HabitForm({ open, onClose, onSave, initial }) {
+  const [name, setName] = useState(initial?.name ?? '');
+  const [emoji, setEmoji] = useState(initial?.emoji ?? '✅');
+  const [color, setColor] = useState(initial?.color ?? COLORS[0]);
+  const [freqType, setFreqType] = useState(initial?.frequency.type ?? 'daily');
+  const [timesPerWeek, setTimesPerWeek] = useState(initial?.frequency.type === 'weekly' ? initial.frequency.timesPerWeek : 3);
+  const [weekdays, setWeekdays] = useState(initial?.frequency.type === 'custom' ? initial.frequency.weekdays : [1, 3, 5]);
+  const [notes, setNotes] = useState(initial?.notes ?? '');
+  const [reminder, setReminder] = useState(initial?.reminderTime ?? '');
+  const [error, setError] = useState('');
+  // reset state when reopened with different initial
+  useEffect(() => {
+    if (!open) return;
+    setName(initial?.name ?? '');
+    setEmoji(initial?.emoji ?? '✅');
+    setColor(initial?.color ?? COLORS[0]);
+    setFreqType(initial?.frequency?.type ?? 'daily');
+    setTimesPerWeek(initial?.frequency?.type === 'weekly' ? initial.frequency.timesPerWeek : 3);
+    setWeekdays(initial?.frequency?.type === 'custom' ? initial.frequency.weekdays : [1, 3, 5]);
+    setNotes(initial?.notes ?? '');
+    setReminder(initial?.reminderTime ?? '');
+    setError('');
+  }, [open, initial]);
+
+  const submit = () => {
+    if (!name.trim()) { setError('Dê um nome ao hábito'); return; }
+    let frequency;
+    if (freqType === 'daily') frequency = { type: 'daily' };
+    else if (freqType === 'weekly') frequency = { type: 'weekly', timesPerWeek: Math.max(1, Math.min(7, timesPerWeek)) };
+    else {
+      if (weekdays.length === 0) { setError('Escolha pelo menos um dia'); return; }
+      frequency = { type: 'custom', weekdays: [...weekdays].sort() };
+    }
+    onSave({
+      id: initial?.id, name: name.trim(), emoji, color, frequency,
+      notes: notes.trim() || undefined,
+      reminderTime: reminder || null,
+    });
+    onClose();
+  };
+  return (
+    <Modal open={open} onClose={onClose} title={initial ? 'Editar hábito' : 'Novo hábito'}
+      footer={
+        <div className="flex justify-end gap-2">
+          <Button variant="ghost" onClick={onClose}>Cancelar</Button>
+          <Button onClick={submit}>{initial ? 'Salvar' : 'Criar hábito'}</Button>
+        </div>
+      }>
+      <div className="space-y-4">
+        <Input label="Nome" value={name} onChange={(e) => setName(e.target.value)}
+          placeholder="Ex: Beber 2L de água"
+          error={error && !name.trim() ? error : undefined}
+          autoFocus />
+        <div>
+          <div className="mb-1.5 text-sm font-medium text-slate-700 dark:text-slate-300">Ícone</div>
+          <div className="flex flex-wrap gap-1.5">
+            {EMOJIS.map((e) => (
+              <button key={e} type="button" onClick={() => setEmoji(e)}
+                className={`grid h-10 w-10 place-items-center rounded-xl border text-xl transition ${emoji === e ? 'border-brand-500 bg-brand-50 dark:bg-brand-900/40' : 'border-slate-200 hover:bg-slate-100 dark:border-slate-700 dark:hover:bg-slate-800'}`}>
+                {e}
+              </button>
+            ))}
+          </div>
+        </div>
+        <div>
+          <div className="mb-1.5 text-sm font-medium text-slate-700 dark:text-slate-300">Cor</div>
+          <div className="flex flex-wrap gap-2">
+            {COLORS.map((c) => (
+              <button key={c} type="button" onClick={() => setColor(c)}
+                className={`h-9 w-9 rounded-full border-2 transition ${color === c ? 'border-slate-900 dark:border-white' : 'border-transparent'}`}
+                style={{ backgroundColor: c }} aria-label={`Cor ${c}`} />
+            ))}
+          </div>
+        </div>
+        <div>
+          <div className="mb-1.5 text-sm font-medium text-slate-700 dark:text-slate-300">Frequência</div>
+          <div className="grid grid-cols-3 gap-2">
+            {['daily', 'weekly', 'custom'].map((t) => (
+              <button key={t} type="button" onClick={() => setFreqType(t)}
+                className={`h-10 rounded-xl border text-sm font-medium transition ${freqType === t ? 'border-brand-500 bg-brand-50 text-brand-700 dark:bg-brand-900/40 dark:text-brand-200' : 'border-slate-200 hover:bg-slate-50 dark:border-slate-700 dark:hover:bg-slate-800'}`}>
+                {t === 'daily' ? 'Diário' : t === 'weekly' ? 'Semanal' : 'Personalizado'}
+              </button>
+            ))}
+          </div>
+          {freqType === 'weekly' && (
+            <div className="mt-3">
+              <Input type="number" min={1} max={7} label="Vezes por semana"
+                value={timesPerWeek} onChange={(e) => setTimesPerWeek(Number(e.target.value))} />
+            </div>
+          )}
+          {freqType === 'custom' && (
+            <div className="mt-3 flex flex-wrap gap-1.5">
+              {WEEKDAYS.map((label, i) => {
+                const active = weekdays.includes(i);
+                return (
+                  <button key={i} type="button"
+                    onClick={() => setWeekdays((cur) => cur.includes(i) ? cur.filter((d) => d !== i) : [...cur, i])}
+                    className={`h-10 min-w-[44px] rounded-xl border px-3 text-sm font-medium transition ${active ? 'border-brand-500 bg-brand-50 text-brand-700 dark:bg-brand-900/40 dark:text-brand-200' : 'border-slate-200 hover:bg-slate-50 dark:border-slate-700 dark:hover:bg-slate-800'}`}>
+                    {label}
+                  </button>
+                );
+              })}
+            </div>
+          )}
+        </div>
+        <Input label="Lembrete (opcional)" type="time" value={reminder} onChange={(e) => setReminder(e.target.value)}
+          hint="Apenas referencial — notificações nativas não são enviadas neste app." />
+        <Textarea label="Notas (opcional)" value={notes} onChange={(e) => setNotes(e.target.value)}
+          placeholder="Qual é a sua motivação? O que precisa estar pronto?" />
+      </div>
+    </Modal>
+  );
+}
+
+function GoalForm({ open, onClose, onSave, initial }) {
+  const [title, setTitle] = useState(initial?.title ?? '');
+  const [description, setDescription] = useState(initial?.description ?? '');
+  const [emoji, setEmoji] = useState(initial?.emoji ?? '🎯');
+  const [color, setColor] = useState(initial?.color ?? COLORS[1]);
+  const [kind, setKind] = useState(initial?.kind ?? 'tasks');
+  const [unit, setUnit] = useState(initial?.unit ?? '');
+  const [startValue, setStartValue] = useState(initial?.startValue ?? 0);
+  const [targetValue, setTargetValue] = useState(initial?.targetValue ?? 100);
+  const [currentValue, setCurrentValue] = useState(initial?.currentValue ?? initial?.startValue ?? 0);
+  const [deadline, setDeadline] = useState(initial?.deadline ?? '');
+  const [subtasks, setSubtasks] = useState(initial?.subtasks ?? []);
+  const [newSub, setNewSub] = useState('');
+  const [error, setError] = useState('');
+  useEffect(() => {
+    if (!open) return;
+    setTitle(initial?.title ?? '');
+    setDescription(initial?.description ?? '');
+    setEmoji(initial?.emoji ?? '🎯');
+    setColor(initial?.color ?? COLORS[1]);
+    setKind(initial?.kind ?? 'tasks');
+    setUnit(initial?.unit ?? '');
+    setStartValue(initial?.startValue ?? 0);
+    setTargetValue(initial?.targetValue ?? 100);
+    setCurrentValue(initial?.currentValue ?? initial?.startValue ?? 0);
+    setDeadline(initial?.deadline ?? '');
+    setSubtasks(initial?.subtasks ?? []);
+    setNewSub('');
+    setError('');
+  }, [open, initial]);
+
+  const submit = () => {
+    if (!title.trim()) { setError('Dê um título à meta'); return; }
+    if (kind === 'numeric' && targetValue === startValue) { setError('Valor alvo precisa ser diferente do inicial'); return; }
+    onSave({
+      id: initial?.id,
+      title: title.trim(),
+      description: description.trim() || undefined,
+      emoji, color, kind,
+      unit: kind === 'numeric' ? (unit.trim() || undefined) : undefined,
+      startValue: kind === 'numeric' ? startValue : undefined,
+      targetValue: kind === 'numeric' ? targetValue : undefined,
+      currentValue: kind === 'numeric' ? currentValue : undefined,
+      subtasks: kind === 'tasks' ? subtasks : undefined,
+      deadline: deadline || null,
+      completedAt: initial?.completedAt ?? null,
+    });
+    onClose();
+  };
+  return (
+    <Modal open={open} onClose={onClose} title={initial ? 'Editar meta' : 'Nova meta'}
+      footer={
+        <div className="flex justify-end gap-2">
+          <Button variant="ghost" onClick={onClose}>Cancelar</Button>
+          <Button onClick={submit}>{initial ? 'Salvar' : 'Criar meta'}</Button>
+        </div>
+      }>
+      <div className="space-y-4">
+        <Input label="Título" value={title} onChange={(e) => setTitle(e.target.value)}
+          placeholder="Ex: Juntar R$ 1.000" autoFocus
+          error={error && !title.trim() ? error : undefined} />
+        <Textarea label="Descrição (opcional)" value={description} onChange={(e) => setDescription(e.target.value)} />
+        <div>
+          <div className="mb-1.5 text-sm font-medium text-slate-700 dark:text-slate-300">Ícone</div>
+          <div className="flex flex-wrap gap-1.5">
+            {EMOJIS.map((e) => (
+              <button key={e} type="button" onClick={() => setEmoji(e)}
+                className={`grid h-10 w-10 place-items-center rounded-xl border text-xl transition ${emoji === e ? 'border-brand-500 bg-brand-50 dark:bg-brand-900/40' : 'border-slate-200 hover:bg-slate-100 dark:border-slate-700 dark:hover:bg-slate-800'}`}>
+                {e}
+              </button>
+            ))}
+          </div>
+        </div>
+        <div>
+          <div className="mb-1.5 text-sm font-medium text-slate-700 dark:text-slate-300">Cor</div>
+          <div className="flex flex-wrap gap-2">
+            {COLORS.map((c) => (
+              <button key={c} type="button" onClick={() => setColor(c)}
+                className={`h-9 w-9 rounded-full border-2 transition ${color === c ? 'border-slate-900 dark:border-white' : 'border-transparent'}`}
+                style={{ backgroundColor: c }} />
+            ))}
+          </div>
+        </div>
+        <div>
+          <div className="mb-1.5 text-sm font-medium text-slate-700 dark:text-slate-300">Tipo</div>
+          <div className="grid grid-cols-2 gap-2">
+            {['tasks', 'numeric'].map((k) => (
+              <button key={k} type="button" onClick={() => setKind(k)}
+                className={`h-11 rounded-xl border text-sm font-medium transition ${kind === k ? 'border-brand-500 bg-brand-50 text-brand-700 dark:bg-brand-900/40 dark:text-brand-200' : 'border-slate-200 hover:bg-slate-50 dark:border-slate-700 dark:hover:bg-slate-800'}`}>
+                {k === 'tasks' ? '☑️ Subtarefas' : '🔢 Numérica'}
+              </button>
+            ))}
+          </div>
+        </div>
+        {kind === 'numeric' ? (
+          <div className="grid grid-cols-3 gap-2">
+            <Input label="Início" type="number" value={startValue} onChange={(e) => setStartValue(Number(e.target.value))} />
+            <Input label="Atual" type="number" value={currentValue} onChange={(e) => setCurrentValue(Number(e.target.value))} />
+            <Input label="Alvo" type="number" value={targetValue} onChange={(e) => setTargetValue(Number(e.target.value))} />
+            <div className="col-span-3">
+              <Input label="Unidade (opcional)" value={unit} onChange={(e) => setUnit(e.target.value)} placeholder="kg, R$, livros, km..." />
+            </div>
+          </div>
+        ) : (
+          <div>
+            <div className="mb-1.5 text-sm font-medium text-slate-700 dark:text-slate-300">Subtarefas</div>
+            <div className="space-y-1.5">
+              {subtasks.map((s) => (
+                <div key={s.id} className="flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm dark:border-slate-700 dark:bg-slate-900">
+                  <span className="flex-1 truncate">{s.title}</span>
+                  <button type="button" onClick={() => setSubtasks((cur) => cur.filter((t) => t.id !== s.id))}
+                    className="text-slate-400 hover:text-rose-600" aria-label="Remover">✕</button>
+                </div>
+              ))}
+              <div className="flex gap-2">
+                <Input value={newSub} onChange={(e) => setNewSub(e.target.value)} placeholder="Adicionar tarefa"
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter' && newSub.trim()) {
+                      e.preventDefault();
+                      setSubtasks((cur) => [...cur, { id: uid(), title: newSub.trim(), done: false }]);
+                      setNewSub('');
+                    }
+                  }} />
+                <Button type="button" variant="secondary" onClick={() => {
+                  if (!newSub.trim()) return;
+                  setSubtasks((cur) => [...cur, { id: uid(), title: newSub.trim(), done: false }]);
+                  setNewSub('');
+                }}>Adicionar</Button>
+              </div>
+            </div>
+          </div>
+        )}
+        <Input label="Prazo (opcional)" type="date" value={deadline} onChange={(e) => setDeadline(e.target.value)} />
+      </div>
+    </Modal>
+  );
+}
+
+/* ---------------- pages ---------------- */
+function LoginPage() {
+  // Login por email/senha foi substituído pelo Invise Gate (chave única).
+  // Se alguém cair aqui (ex: após logout), limpamos a chave e recarregamos.
+  useEffect(() => {
+    try { localStorage.removeItem('invise.key'); } catch (e) {}
+    location.reload();
+  }, []);
+  return (
+    <div className="grid min-h-[100dvh] place-items-center">
+      <div className="text-sm text-slate-500">Saindo…</div>
+    </div>
+  );
+}
+
+function _LoginPageDisabled() {
+  const { login, register } = useAuth();
+  const [mode, setMode] = useState('login');
+  const [name, setName] = useState('');
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [error, setError] = useState('');
+  const [loading, setLoading] = useState(false);
+  const submit = async (e) => {
+    e.preventDefault();
+    setError('');
+    setLoading(true);
+    try {
+      if (mode === 'login') await login(email, password);
+      else await register(name, email, password);
+      navigate('/');
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Erro inesperado');
+    } finally { setLoading(false); }
+  };
+  return (
+    <div className="grid min-h-[100dvh] place-items-center px-4 py-10">
+      <div className="w-full max-w-md">
+        <div className="mb-8 flex flex-col items-center text-center">
+          <div className="mb-3 grid h-14 w-14 place-items-center rounded-2xl bg-gradient-to-br from-brand-500 to-brand-700 text-2xl text-white shadow-lg shadow-brand-700/30">✦</div>
+          <h1 className="text-2xl font-extrabold tracking-tight">Hábitos & Metas</h1>
+          <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">Pequenos passos. Grandes resultados.</p>
+        </div>
+        <div className="rounded-2xl border border-slate-200/70 bg-white p-5 shadow-sm dark:border-slate-800/70 dark:bg-slate-900">
+          <div className="mb-4 grid grid-cols-2 gap-1 rounded-xl bg-slate-100 p-1 text-sm font-medium dark:bg-slate-800">
+            {['login', 'register'].map((m) => (
+              <button key={m} onClick={() => setMode(m)}
+                className={`h-9 rounded-lg transition ${mode === m ? 'bg-white shadow-sm dark:bg-slate-900' : 'text-slate-500 dark:text-slate-400'}`}>
+                {m === 'login' ? 'Entrar' : 'Criar conta'}
+              </button>
+            ))}
+          </div>
+          <form onSubmit={submit} className="space-y-3">
+            {mode === 'register' && (
+              <Input label="Nome" value={name} onChange={(e) => setName(e.target.value)}
+                placeholder="Como podemos te chamar?" required autoFocus autoComplete="name" />
+            )}
+            <Input label="E-mail" type="email" value={email} onChange={(e) => setEmail(e.target.value)}
+              placeholder="voce@exemplo.com" required autoComplete="email" autoFocus={mode === 'login'} />
+            <Input label="Senha" type="password" value={password} onChange={(e) => setPassword(e.target.value)}
+              placeholder="Mínimo 6 caracteres" required
+              autoComplete={mode === 'login' ? 'current-password' : 'new-password'} minLength={6} />
+            {error && (
+              <div className="rounded-xl border border-rose-200 bg-rose-50 px-3 py-2 text-sm text-rose-700 dark:border-rose-900 dark:bg-rose-950/50 dark:text-rose-300">
+                {error}
+              </div>
+            )}
+            <Button block size="lg" disabled={loading}>
+              {loading ? 'Aguarde…' : mode === 'login' ? 'Entrar' : 'Criar conta'}
+            </Button>
+          </form>
+          <p className="mt-4 text-center text-xs text-slate-500 dark:text-slate-400">
+            Demo local — dados ficam apenas no seu navegador. <br />
+            Integre um backend (Supabase, Firebase, NextAuth) para produção.
+          </p>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function DashboardPage() {
+  const { user } = useAuth();
+  const { habits, logs, goals, saveHabit, saveGoal } = useData();
+  const [habitOpen, setHabitOpen] = useState(false);
+  const [goalOpen, setGoalOpen] = useState(false);
+  const today = todayKey();
+  const todayHabits = habits;
+  const completedToday = useMemo(() => todayHabits.filter((h) => isCompleted(h.id, today)).length, [todayHabits, today]);
+  const todayRatio = todayHabits.length ? completedToday / todayHabits.length : 0;
+  const lp = user ? levelProgress(user.xp) : null;
+  const activeGoals = goals.filter((g) => !g.completedAt).slice(0, 3);
+  const greeting = (() => {
+    const h = new Date().getHours();
+    if (h < 6) return 'Boa madrugada';
+    if (h < 12) return 'Bom dia';
+    if (h < 18) return 'Boa tarde';
+    return 'Boa noite';
+  })();
+  return (
+    <div className="space-y-6">
+      <div>
+        <div className="text-sm text-slate-500 dark:text-slate-400">{greeting},</div>
+        <div className="text-2xl font-extrabold tracking-tight">{user?.name ?? 'amigo(a)'} 👋</div>
+      </div>
+      <Card className="flex items-center gap-4 bg-gradient-to-br from-brand-600 to-brand-800 text-white border-0">
+        <ProgressRing value={todayRatio} size={84} stroke={8} color="#ffffff" trackClassName="text-white/20">
+          <div className="text-center text-white">
+            <div className="text-lg font-extrabold leading-none">{completedToday}/{todayHabits.length}</div>
+            <div className="text-[10px] opacity-80">hoje</div>
+          </div>
+        </ProgressRing>
+        <div className="min-w-0 flex-1">
+          <div className="text-xs uppercase tracking-wide opacity-80">Seu dia</div>
+          <div className="mt-0.5 text-lg font-bold">
+            {todayHabits.length === 0 ? 'Crie seu primeiro hábito'
+              : completedToday === todayHabits.length ? 'Dia perfeito! 🎉'
+              : `Faltam ${todayHabits.length - completedToday} para fechar o dia`}
+          </div>
+          {lp && (
+            <div className="mt-2">
+              <div className="flex items-center justify-between text-xs opacity-90">
+                <span>Nível {lp.level}</span>
+                <span>{lp.into} / {lp.span} XP</span>
+              </div>
+              <div className="mt-1 h-1.5 w-full overflow-hidden rounded-full bg-white/20">
+                <div className="h-full rounded-full bg-white transition-all duration-700" style={{ width: `${lp.pct * 100}%` }} />
+              </div>
+            </div>
+          )}
+        </div>
+      </Card>
+      <div>
+        <SectionTitle action={<Button size="sm" onClick={() => setHabitOpen(true)}>+ Novo hábito</Button>}>
+          Hábitos de hoje
+        </SectionTitle>
+        {todayHabits.length === 0 ? (
+          <EmptyState emoji="🌱" title="Comece com 1 hábito simples"
+            description="Pequenos passos consistentes. Marque concluído, ganhe XP e construa streaks."
+            action={<Button onClick={() => setHabitOpen(true)}>Criar hábito</Button>} />
+        ) : (
+          <div className="space-y-2">
+            {todayHabits.map((h) => <HabitCard key={h.id} habit={h} logs={logs} dateKey={today} />)}
+          </div>
+        )}
+      </div>
+      <div>
+        <SectionTitle>Resumo da semana</SectionTitle>
+        <Card><WeeklyBars logs={logs} weekStart={user?.preferences.weekStart ?? 1} /></Card>
+      </div>
+      <div>
+        <SectionTitle action={<Button size="sm" variant="secondary" onClick={() => setGoalOpen(true)}>+ Nova meta</Button>}>
+          Metas em andamento
+        </SectionTitle>
+        {activeGoals.length === 0 ? (
+          <EmptyState emoji="🎯" title="Defina o que quer alcançar"
+            description="Quebre objetivos em subtarefas ou acompanhe um número até a meta."
+            action={<Button onClick={() => setGoalOpen(true)}>Criar meta</Button>} />
+        ) : (
+          <div className="space-y-2">
+            {activeGoals.map((g) => <GoalCard key={g.id} goal={g} />)}
+          </div>
+        )}
+      </div>
+      <HabitForm open={habitOpen} onClose={() => setHabitOpen(false)} onSave={(h) => saveHabit(h)} />
+      <GoalForm open={goalOpen} onClose={() => setGoalOpen(false)} onSave={(g) => saveGoal(g)} />
+    </div>
+  );
+}
+
+function HabitsPage() {
+  const { habits, logs, saveHabit } = useData();
+  const [open, setOpen] = useState(false);
+  const todaysHabits = useMemo(() => habits.filter((h) => isScheduledOn(h.frequency, new Date())), [habits]);
+  const others = useMemo(() => habits.filter((h) => !isScheduledOn(h.frequency, new Date())), [habits]);
+  return (
+    <div className="space-y-5">
+      <div className="flex items-center justify-between">
+        <h1 className="text-2xl font-extrabold tracking-tight">Hábitos</h1>
+        <Button onClick={() => setOpen(true)}>+ Novo</Button>
+      </div>
+      {habits.length === 0 ? (
+        <EmptyState emoji="✨" title="Crie seu primeiro hábito"
+          description="Diário, semanal ou em dias específicos. Você decide."
+          action={<Button onClick={() => setOpen(true)}>Criar hábito</Button>} />
+      ) : (
+        <>
+          <SectionTitle>Para hoje</SectionTitle>
+          <div className="space-y-2">
+            {todaysHabits.length === 0 && (
+              <Card className="text-sm text-slate-500 dark:text-slate-400">
+                Nenhum hábito agendado para hoje. Aproveite para descansar! 🛌
+              </Card>
+            )}
+            {todaysHabits.map((h) => <HabitCard key={h.id} habit={h} logs={logs} />)}
+          </div>
+          {others.length > 0 && (
+            <>
+              <SectionTitle>Outros dias</SectionTitle>
+              <div className="space-y-2">
+                {others.map((h) => <HabitCard key={h.id} habit={h} logs={logs} />)}
+              </div>
+            </>
+          )}
+        </>
+      )}
+      <HabitForm open={open} onClose={() => setOpen(false)} onSave={(h) => saveHabit(h)} />
+    </div>
+  );
+}
+
+function StatBox({ label, value, suffix }) {
+  return (
+    <Card className="!p-3 text-center">
+      <div className="text-[10px] uppercase tracking-wide text-slate-500">{label}</div>
+      <div className="text-lg font-bold">{value} {suffix && <span className="text-base">{suffix}</span>}</div>
+    </Card>
+  );
+}
+
+function HabitDetailPage({ id }) {
+  const { user } = useAuth();
+  const { habits, logs, toggleHabit, saveHabit, archiveHabit, deleteHabit } = useData();
+  const [edit, setEdit] = useState(false);
+  const [confirmDel, setConfirmDel] = useState(false);
+  const habit = habits.find((h) => h.id === id);
+  if (!habit) {
+    return <EmptyState emoji="🤔" title="Hábito não encontrado" action={<Button onClick={() => navigate('/habits')}>Voltar</Button>} />;
+  }
+  const habitLogs = logs.filter((l) => l.habitId === habit.id);
+  const streak = currentStreak(habit, logs);
+  const longest = longestStreak(habit, logs);
+  const weekRatio = weeklyCompletionRatio(habit, logs, user?.preferences.weekStart ?? 1);
+  const expected = expectedThisWeek(habit.frequency);
+  const last30 = Array.from({ length: 30 }).map((_, i) => addDays(new Date(), -(29 - i)));
+  const freqLabel = habit.frequency.type === 'daily' ? 'Diário'
+    : habit.frequency.type === 'weekly' ? `${habit.frequency.timesPerWeek}× por semana`
+    : habit.frequency.weekdays.map((d) => WEEKDAYS[d]).join(', ');
+  return (
+    <div className="space-y-5">
+      <button onClick={() => navigate(-1)} className="text-sm text-slate-500 hover:text-slate-900 dark:text-slate-400 dark:hover:text-slate-100">← Voltar</button>
+      <Card className="flex items-center gap-4">
+        <div className="grid h-14 w-14 place-items-center rounded-2xl text-3xl" style={{ backgroundColor: habit.color + '22', color: habit.color }}>
+          {habit.emoji}
+        </div>
+        <div className="min-w-0 flex-1">
+          <div className="truncate text-xl font-bold">{habit.name}</div>
+          <div className="mt-0.5 flex flex-wrap items-center gap-2 text-xs text-slate-500 dark:text-slate-400">
+            <Pill tone="brand">{freqLabel}</Pill>
+            {habit.reminderTime && <Pill>⏰ {habit.reminderTime}</Pill>}
+          </div>
+        </div>
+        <ProgressRing value={weekRatio} size={56} stroke={6} color={habit.color}>
+          <span className="text-xs font-bold">{Math.round(weekRatio * 100)}%</span>
+        </ProgressRing>
+      </Card>
+      <div className="grid grid-cols-3 gap-2">
+        <StatBox label="Streak" value={streak.toString()} suffix="🔥" />
+        <StatBox label="Recorde" value={longest.toString()} suffix="🏆" />
+        <StatBox label="Semana" value={`${Math.round(weekRatio * expected)}/${expected}`} />
+      </div>
+      <div>
+        <SectionTitle>Últimos 30 dias</SectionTitle>
+        <Card>
+          <div className="grid grid-cols-10 gap-1.5">
+            {last30.map((d) => {
+              const key = formatYMD(d);
+              const done = isCompleted(habit.id, key);
+              const scheduled = isScheduledOn(habit.frequency, d);
+              const isToday = key === todayKey();
+              return (
+                <button key={key} onClick={() => toggleHabit(habit, key)} title={key}
+                  className={`relative aspect-square rounded-lg border text-[10px] font-medium transition ${done ? 'border-transparent text-white' : scheduled ? 'border-slate-200 text-slate-400 hover:bg-slate-100 dark:border-slate-700 dark:hover:bg-slate-800' : 'border-dashed border-slate-200 text-slate-300 dark:border-slate-800 dark:text-slate-600'} ${isToday ? 'ring-2 ring-brand-500 ring-offset-1 ring-offset-white dark:ring-offset-slate-900' : ''}`}
+                  style={done ? { backgroundColor: habit.color } : undefined}>
+                  {d.getDate()}
+                </button>
+              );
+            })}
+          </div>
+        </Card>
+      </div>
+      <div>
+        <SectionTitle>Histórico (12 semanas)</SectionTitle>
+        <Card><Heatmap habits={[habit]} logs={habitLogs} days={84} /></Card>
+      </div>
+      {habit.notes && (
+        <div>
+          <SectionTitle>Notas</SectionTitle>
+          <Card className="whitespace-pre-wrap text-sm text-slate-700 dark:text-slate-300">{habit.notes}</Card>
+        </div>
+      )}
+      <div className="flex flex-wrap gap-2">
+        <Button variant="secondary" onClick={() => setEdit(true)}>✏️ Editar</Button>
+        <Button variant="ghost" onClick={() => archiveHabit(habit.id)}>📦 Arquivar</Button>
+        <Button variant="danger" onClick={() => setConfirmDel(true)}>🗑 Excluir</Button>
+      </div>
+      <HabitForm open={edit} onClose={() => setEdit(false)} onSave={(h) => saveHabit(h)} initial={habit} />
+      <Confirm open={confirmDel} onClose={() => setConfirmDel(false)}
+        title="Excluir hábito?" description="Essa ação remove o hábito e todo o histórico. Não pode ser desfeita."
+        confirmLabel="Excluir" destructive
+        onConfirm={() => { deleteHabit(habit.id); navigate('/habits'); }} />
+    </div>
+  );
+}
+
+function GoalsPage() {
+  const { goals, saveGoal } = useData();
+  const [open, setOpen] = useState(false);
+  const active = goals.filter((g) => !g.completedAt);
+  const done = goals.filter((g) => g.completedAt);
+  return (
+    <div className="space-y-5">
+      <div className="flex items-center justify-between">
+        <h1 className="text-2xl font-extrabold tracking-tight">Metas</h1>
+        <Button onClick={() => setOpen(true)}>+ Nova</Button>
+      </div>
+      {goals.length === 0 ? (
+        <EmptyState emoji="🎯" title="Defina algo importante para você"
+          description="Metas com prazo, subtarefas ou número-alvo. Acompanhe a evolução."
+          action={<Button onClick={() => setOpen(true)}>Criar meta</Button>} />
+      ) : (
+        <>
+          {active.length > 0 && (
+            <>
+              <SectionTitle>Em andamento</SectionTitle>
+              <div className="space-y-2">{active.map((g) => <GoalCard key={g.id} goal={g} />)}</div>
+            </>
+          )}
+          {done.length > 0 && (
+            <>
+              <SectionTitle>Concluídas</SectionTitle>
+              <div className="space-y-2 opacity-90">{done.map((g) => <GoalCard key={g.id} goal={g} />)}</div>
+            </>
+          )}
+        </>
+      )}
+      <GoalForm open={open} onClose={() => setOpen(false)} onSave={(g) => saveGoal(g)} />
+    </div>
+  );
+}
+
+function GoalDetailPage({ id }) {
+  const { goals, saveGoal, updateGoal, deleteGoal } = useData();
+  const [edit, setEdit] = useState(false);
+  const [confirmDel, setConfirmDel] = useState(false);
+  const [newSub, setNewSub] = useState('');
+  const goal = goals.find((g) => g.id === id);
+  if (!goal) {
+    return <EmptyState emoji="🤔" title="Meta não encontrada" action={<Button onClick={() => navigate('/goals')}>Voltar</Button>} />;
+  }
+  const p = progressOf(goal);
+  const onToggleSub = (subId) => {
+    const subs = (goal.subtasks ?? []).map((s) => s.id === subId ? { ...s, done: !s.done } : s);
+    const isDone = subs.length > 0 && subs.every((s) => s.done);
+    updateGoal({ ...goal, subtasks: subs, completedAt: isDone ? (goal.completedAt ?? new Date().toISOString()) : null });
+  };
+  const onAddSub = () => {
+    if (!newSub.trim()) return;
+    updateGoal({ ...goal, subtasks: [...(goal.subtasks ?? []), { id: uid(), title: newSub.trim(), done: false }] });
+    setNewSub('');
+  };
+  const onRemoveSub = (subId) => updateGoal({ ...goal, subtasks: (goal.subtasks ?? []).filter((s) => s.id !== subId) });
+  const onUpdateNumeric = (val) => {
+    const isDone = goal.targetValue != null &&
+      ((goal.targetValue >= (goal.startValue ?? 0) && val >= goal.targetValue) ||
+       (goal.targetValue < (goal.startValue ?? 0) && val <= goal.targetValue));
+    updateGoal({ ...goal, currentValue: val, completedAt: isDone ? (goal.completedAt ?? new Date().toISOString()) : null });
+  };
+  return (
+    <div className="space-y-5">
+      <button onClick={() => navigate(-1)} className="text-sm text-slate-500 hover:text-slate-900 dark:text-slate-400 dark:hover:text-slate-100">← Voltar</button>
+      <Card className="flex items-center gap-4">
+        <div className="grid h-14 w-14 place-items-center rounded-2xl text-3xl" style={{ backgroundColor: goal.color + '22', color: goal.color }}>
+          {goal.emoji}
+        </div>
+        <div className="min-w-0 flex-1">
+          <div className="truncate text-xl font-bold">{goal.title}</div>
+          <div className="mt-0.5 flex flex-wrap items-center gap-2 text-xs text-slate-500 dark:text-slate-400">
+            <Pill tone="brand">{goal.kind === 'numeric' ? 'Numérica' : 'Subtarefas'}</Pill>
+            {goal.deadline && <Pill tone="amber">📅 {relativeFromNow(goal.deadline)}</Pill>}
+            {goal.completedAt && <Pill tone="emerald">✓ concluída</Pill>}
+          </div>
+        </div>
+        <ProgressRing value={p} size={64} stroke={7} color={goal.color}>
+          <span className="text-sm font-bold">{Math.round(p * 100)}%</span>
+        </ProgressRing>
+      </Card>
+      {goal.description && (
+        <Card className="text-sm text-slate-700 dark:text-slate-300 whitespace-pre-wrap">{goal.description}</Card>
+      )}
+      {goal.kind === 'numeric' ? (
+        <Card>
+          <div className="mb-2 flex items-baseline justify-between">
+            <div>
+              <div className="text-xs uppercase tracking-wide text-slate-500">Atual</div>
+              <div className="text-2xl font-bold">
+                {goal.currentValue ?? goal.startValue ?? 0}
+                {goal.unit && <span className="ml-1 text-sm text-slate-500">{goal.unit}</span>}
+              </div>
+            </div>
+            <div className="text-right">
+              <div className="text-xs uppercase tracking-wide text-slate-500">Alvo</div>
+              <div className="text-2xl font-bold">
+                {goal.targetValue ?? 0}
+                {goal.unit && <span className="ml-1 text-sm text-slate-500">{goal.unit}</span>}
+              </div>
+            </div>
+          </div>
+          <div className="h-2 w-full overflow-hidden rounded-full bg-slate-100 dark:bg-slate-800">
+            <div className="h-full rounded-full transition-all duration-700" style={{ width: `${p * 100}%`, backgroundColor: goal.color }} />
+          </div>
+          <div className="mt-3 flex gap-2">
+            <Input type="number" defaultValue={goal.currentValue ?? goal.startValue ?? 0}
+              onBlur={(e) => onUpdateNumeric(Number(e.currentTarget.value))}
+              onKeyDown={(e) => { if (e.key === 'Enter') e.currentTarget.blur(); }} />
+            <Button variant="secondary" onClick={() => onUpdateNumeric((goal.currentValue ?? goal.startValue ?? 0) + 1)}>+1</Button>
+          </div>
+        </Card>
+      ) : (
+        <Card>
+          <div className="space-y-1.5">
+            {(goal.subtasks ?? []).map((s) => (
+              <div key={s.id} className="flex items-center gap-3 rounded-xl border border-slate-200 bg-white px-3 py-2 dark:border-slate-700 dark:bg-slate-900">
+                <button onClick={() => onToggleSub(s.id)}
+                  className={`grid h-7 w-7 flex-shrink-0 place-items-center rounded-full border-2 transition ${s.done ? 'border-emerald-500 bg-emerald-500 text-white' : 'border-slate-300 dark:border-slate-600'}`}
+                  aria-pressed={s.done}>{s.done ? '✓' : ''}</button>
+                <div className={`flex-1 text-sm ${s.done ? 'text-slate-400 line-through' : ''}`}>{s.title}</div>
+                <button onClick={() => onRemoveSub(s.id)} className="text-slate-400 hover:text-rose-600" aria-label="Remover">✕</button>
+              </div>
+            ))}
+            {(goal.subtasks ?? []).length === 0 && (
+              <div className="text-sm text-slate-500">Sem subtarefas. Adicione passos abaixo para acompanhar a evolução.</div>
+            )}
+          </div>
+          <div className="mt-3 flex gap-2">
+            <Input value={newSub} onChange={(e) => setNewSub(e.target.value)} placeholder="Nova subtarefa"
+              onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); onAddSub(); } }} />
+            <Button variant="secondary" onClick={onAddSub}>Adicionar</Button>
+          </div>
+        </Card>
+      )}
+      <div className="flex flex-wrap gap-2">
+        <Button variant="secondary" onClick={() => setEdit(true)}>✏️ Editar</Button>
+        <Button variant="danger" onClick={() => setConfirmDel(true)}>🗑 Excluir</Button>
+      </div>
+      <GoalForm open={edit} onClose={() => setEdit(false)} onSave={(g) => saveGoal(g)} initial={goal} />
+      <Confirm open={confirmDel} onClose={() => setConfirmDel(false)}
+        title="Excluir meta?" description="Essa ação não pode ser desfeita."
+        confirmLabel="Excluir" destructive
+        onConfirm={() => { deleteGoal(goal.id); navigate('/goals'); }} />
+    </div>
+  );
+}
+
+function StatsPage() {
+  const { user } = useAuth();
+  const { habits, logs, goals } = useData();
+  const totalCompletions = logs.length;
+  const longestAny = useMemo(() => habits.reduce((m, h) => Math.max(m, longestStreak(h, logs)), 0), [habits, logs]);
+  const currentBest = useMemo(() => habits.reduce((m, h) => Math.max(m, currentStreak(h, logs)), 0), [habits, logs]);
+  const series = useMemo(() => {
+    const days = 30;
+    return Array.from({ length: days }).map((_, i) => {
+      const d = addDays(new Date(), -(days - 1 - i));
+      const key = formatYMD(d);
+      return logs.filter((l) => l.date === key).length;
+    });
+  }, [logs]);
+  const goalCompleted = goals.filter((g) => g.completedAt).length;
+  const habitsRanking = useMemo(() => {
+    return [...habits].map((h) => ({
+      h,
+      streak: currentStreak(h, logs),
+      completions: logs.filter((l) => l.habitId === h.id).length,
+      weekRatio: weeklyCompletionRatio(h, logs, user?.preferences.weekStart ?? 1),
+    })).sort((a, b) => b.completions - a.completions).slice(0, 5);
+  }, [habits, logs, user]);
+  if (habits.length === 0 && goals.length === 0) {
+    return <EmptyState emoji="📊" title="Sem dados ainda" description="Crie hábitos e metas para ver suas estatísticas aqui." />;
+  }
+  return (
+    <div className="space-y-5">
+      <h1 className="text-2xl font-extrabold tracking-tight">Estatísticas</h1>
+      <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
+        <SimpleStat label="Conclusões" value={totalCompletions} emoji="✅" />
+        <SimpleStat label="Streak atual" value={`${currentBest} 🔥`} />
+        <SimpleStat label="Recorde" value={`${longestAny} 🏆`} />
+        <SimpleStat label="Metas feitas" value={goalCompleted} emoji="🎯" />
+      </div>
+      <div>
+        <SectionTitle>Últimos 30 dias</SectionTitle>
+        <Card><LineChart series={series} /></Card>
+      </div>
+      <div>
+        <SectionTitle>Esta semana</SectionTitle>
+        <Card><WeeklyBars logs={logs} weekStart={user?.preferences.weekStart ?? 1} /></Card>
+      </div>
+      <div>
+        <SectionTitle>Mapa de calor (12 semanas)</SectionTitle>
+        <Card><Heatmap habits={habits} logs={logs} days={84} /></Card>
+      </div>
+      {habitsRanking.length > 0 && (
+        <div>
+          <SectionTitle>Top hábitos</SectionTitle>
+          <div className="space-y-2">
+            {habitsRanking.map(({ h, streak, completions, weekRatio }) => (
+              <Card key={h.id} className="flex items-center gap-3 !p-3">
+                <div className="grid h-10 w-10 place-items-center rounded-xl text-xl" style={{ backgroundColor: h.color + '22', color: h.color }}>{h.emoji}</div>
+                <div className="min-w-0 flex-1">
+                  <div className="truncate font-semibold">{h.name}</div>
+                  <div className="text-xs text-slate-500">{completions} conclusões • {Math.round(weekRatio * 100)}% esta semana</div>
+                </div>
+                {streak > 0 && <Pill tone="amber">🔥 {streak}</Pill>}
+              </Card>
+            ))}
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+function SimpleStat({ label, value, emoji }) {
+  return (
+    <Card className="!p-3">
+      <div className="text-[10px] uppercase tracking-wide text-slate-500">{label}</div>
+      <div className="mt-0.5 text-xl font-bold">{value} {emoji && <span>{emoji}</span>}</div>
+    </Card>
+  );
+}
+
+function ProfilePage() {
+  const { user, logout } = useAuth();
+  const { theme, setTheme } = useTheme();
+  const { habits, goals, logs } = useData();
+  const [confirmReset, setConfirmReset] = useState(false);
+  if (!user) return null;
+  const lp = levelProgress(user.xp);
+  const unlocked = new Set(user.badges);
+  const exportData = () => {
+    const payload = {
+      exportedAt: new Date().toISOString(),
+      user: { name: user.name, email: user.email, xp: user.xp, level: user.level, badges: user.badges },
+      habits, goals, logs,
+    };
+    const blob = new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `habitos-export-${new Date().toISOString().slice(0, 10)}.json`;
+    a.click();
+    URL.revokeObjectURL(url);
+  };
+  const exportCalendar = () => {
+    const goalsWithDate = goals.filter((g) => g.deadline);
+    if (goalsWithDate.length === 0) { alert('Nenhuma meta com prazo para exportar.'); return; }
+    const lines = ['BEGIN:VCALENDAR', 'VERSION:2.0', 'PRODID:-//Habitos//PT-BR'];
+    for (const g of goalsWithDate) {
+      const d = (g.deadline ?? '').replaceAll('-', '');
+      lines.push(
+        'BEGIN:VEVENT',
+        `UID:${g.id}@habitos`,
+        `DTSTAMP:${new Date().toISOString().replaceAll('-', '').replaceAll(':', '').split('.')[0]}Z`,
+        `DTSTART;VALUE=DATE:${d}`,
+        `DTEND;VALUE=DATE:${d}`,
+        `SUMMARY:${g.emoji} ${g.title}`,
+        `DESCRIPTION:${(g.description ?? '').replace(/\n/g, ' ')}`,
+        'END:VEVENT'
+      );
+    }
+    lines.push('END:VCALENDAR');
+    const blob = new Blob([lines.join('\r\n')], { type: 'text/calendar' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'metas.ics';
+    a.click();
+    URL.revokeObjectURL(url);
+  };
+  const resetData = () => { removeKey(Keys.habits); removeKey(Keys.habitLogs); removeKey(Keys.goals); location.reload(); };
+  return (
+    <div className="space-y-5">
+      <h1 className="text-2xl font-extrabold tracking-tight">Perfil</h1>
+      <Card className="flex items-center gap-4">
+        <div className="grid h-14 w-14 place-items-center rounded-2xl bg-gradient-to-br from-brand-500 to-brand-700 text-2xl font-bold text-white">{user.name.slice(0, 1).toUpperCase()}</div>
+        <div className="min-w-0 flex-1">
+          <div className="truncate text-lg font-bold">{user.name}</div>
+          <div className="truncate text-sm text-slate-500 dark:text-slate-400">{user.email}</div>
+          <div className="mt-2">
+            <div className="flex items-center justify-between text-xs">
+              <span className="font-semibold">Nível {lp.level}</span>
+              <span className="text-slate-500">{lp.into} / {lp.span} XP</span>
+            </div>
+            <div className="mt-1 h-1.5 w-full overflow-hidden rounded-full bg-slate-100 dark:bg-slate-800">
+              <div className="h-full rounded-full bg-gradient-to-r from-brand-400 to-brand-700 transition-all duration-700" style={{ width: `${lp.pct * 100}%` }} />
+            </div>
+          </div>
+        </div>
+      </Card>
+      <div>
+        <SectionTitle>Conquistas</SectionTitle>
+        <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
+          {ACHIEVEMENTS.map((a) => {
+            const got = unlocked.has(a.id);
+            return (
+              <Card key={a.id} className={`!p-3 transition ${got ? '' : 'opacity-50 grayscale'}`}>
+                <div className="flex items-center gap-2">
+                  <span className="text-2xl">{a.emoji}</span>
+                  <div className="min-w-0 flex-1">
+                    <div className="truncate text-sm font-semibold">{a.name}</div>
+                    {got && <Pill tone="emerald">desbloqueada</Pill>}
+                  </div>
+                </div>
+                <div className="mt-1 text-xs text-slate-500">{a.description}</div>
+              </Card>
+            );
+          })}
+        </div>
+      </div>
+      <div>
+        <SectionTitle>Tema</SectionTitle>
+        <Card className="!p-2">
+          <div className="grid grid-cols-3 gap-1">
+            {['light', 'dark', 'system'].map((t) => (
+              <button key={t} onClick={() => setTheme(t)}
+                className={`h-10 rounded-xl text-sm font-medium transition ${theme === t ? 'bg-brand-50 text-brand-700 dark:bg-brand-900/40 dark:text-brand-200' : 'text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-800'}`}>
+                {t === 'light' ? '☀️ Claro' : t === 'dark' ? '🌙 Escuro' : '💻 Sistema'}
+              </button>
+            ))}
+          </div>
+        </Card>
+      </div>
+      <div>
+        <SectionTitle>Dados</SectionTitle>
+        <div className="flex flex-wrap gap-2">
+          <Button variant="secondary" onClick={exportData}>⬇️ Exportar JSON</Button>
+          <Button variant="secondary" onClick={exportCalendar}>📅 Exportar metas (.ics)</Button>
+          <Button variant="danger" onClick={() => setConfirmReset(true)}>♻️ Limpar dados</Button>
+        </div>
+      </div>
+      <Button variant="ghost" onClick={logout} block>Sair da conta</Button>
+      <p className="pb-2 text-center text-xs text-slate-400">v1.0.0 — feito com ☕ e dedicação</p>
+      <Confirm open={confirmReset} onClose={() => setConfirmReset(false)}
+        title="Apagar todos os dados?" description="Hábitos, metas e histórico serão removidos. Sua conta permanece."
+        confirmLabel="Apagar" destructive onConfirm={resetData} />
+    </div>
+  );
+}
+
+/* ---------------- layout / app shell ---------------- */
+const navItems = [
+  { to: '/', label: 'Início', icon: '🏠', end: true },
+  { to: '/habits', label: 'Hábitos', icon: '✅' },
+  { to: '/goals', label: 'Metas', icon: '🎯' },
+  { to: '/stats', label: 'Estatísticas', icon: '📊' },
+  { to: '/profile', label: 'Perfil', icon: '👤' },
+];
+
+function Layout({ children }) {
+  const { user } = useAuth();
+  const { resolved, toggle } = useTheme();
+  const lp = user ? levelProgress(user.xp) : null;
+  return (
+    <div className="mx-auto flex min-h-[100dvh] max-w-3xl flex-col">
+      <header className="sticky top-0 z-30 flex items-center justify-between gap-3 border-b border-slate-200/70 bg-slate-50/80 px-4 py-3 backdrop-blur dark:border-slate-800/70 dark:bg-slate-950/80">
+        <div className="flex items-center gap-2">
+          <div className="grid h-9 w-9 place-items-center rounded-xl bg-gradient-to-br from-brand-500 to-brand-700 text-lg text-white shadow-md shadow-brand-700/20">✦</div>
+          <div>
+            <div className="text-sm font-bold leading-tight">Hábitos & Metas</div>
+            {user && lp && (
+              <div className="text-[11px] text-slate-500 dark:text-slate-400">Nível {lp.level} • {lp.into}/{lp.span} XP</div>
+            )}
+          </div>
+        </div>
+        <button onClick={toggle} aria-label="Alternar tema"
+          className="grid h-10 w-10 place-items-center rounded-full border border-slate-200 bg-white text-lg shadow-sm transition hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-900 dark:hover:bg-slate-800">
+          {resolved === 'dark' ? '☀️' : '🌙'}
+        </button>
+      </header>
+      <main className="flex-1 px-4 pb-28 pt-4 sm:pb-8">{children}</main>
+      <nav className="fixed inset-x-0 bottom-0 z-30 border-t border-slate-200/70 bg-white/95 backdrop-blur dark:border-slate-800/70 dark:bg-slate-950/95 sm:static sm:rounded-2xl sm:border sm:bg-white sm:shadow-sm">
+        <div className="mx-auto grid max-w-3xl grid-cols-5 gap-1 px-2 pb-[max(env(safe-area-inset-bottom),8px)] pt-2">
+          {navItems.map((it) => (
+            <NavLink key={it.to} to={it.to} end={it.end}
+              className={({ isActive }) => `flex flex-col items-center gap-0.5 rounded-xl py-1.5 text-[11px] font-medium transition ${isActive ? 'bg-brand-50 text-brand-700 dark:bg-brand-900/30 dark:text-brand-200' : 'text-slate-500 hover:text-slate-900 dark:text-slate-400 dark:hover:text-slate-100'}`}>
+              <span className="text-xl leading-none">{it.icon}</span>
+              <span>{it.label}</span>
+            </NavLink>
+          ))}
+        </div>
+      </nav>
+    </div>
+  );
+}
+
+function AuthedRoutes() {
+  const { user, ready } = useAuth();
+  const { path } = useRoute();
+
+  if (!ready) {
+    return (
+      <div className="grid min-h-[100dvh] place-items-center">
+        <div className="h-8 w-8 animate-spin rounded-full border-2 border-brand-500 border-t-transparent" />
+      </div>
+    );
+  }
+
+  // Login route
+  if (path === '/login') {
+    if (user) { navigate('/', { replace: true }); return null; }
+    return <LoginPage />;
+  }
+
+  if (!user) { navigate('/login', { replace: true }); return null; }
+
+  // Match protected routes
+  let body = null;
+  let m;
+  if (path === '/') body = <DashboardPage />;
+  else if (path === '/habits') body = <HabitsPage />;
+  else if ((m = matchRoute('/habits/:id', path))) body = <HabitDetailPage id={m.id} />;
+  else if (path === '/goals') body = <GoalsPage />;
+  else if ((m = matchRoute('/goals/:id', path))) body = <GoalDetailPage id={m.id} />;
+  else if (path === '/stats') body = <StatsPage />;
+  else if (path === '/profile') body = <ProfilePage />;
+  else { navigate('/', { replace: true }); return null; }
+
+  return (
+    <DataProvider>
+      <Layout>{body}</Layout>
+    </DataProvider>
+  );
+}
+
+function App() {
+  return (
+    <ThemeProvider>
+      <ToastProvider>
+        <AuthProvider>
+          <HashRouter>
+            <AuthedRoutes />
+          </HashRouter>
+        </AuthProvider>
+      </ToastProvider>
+    </ThemeProvider>
+  );
+}
+
+ReactDOM.createRoot(document.getElementById('root')).render(<App />);
+    </script>
+  </body>
+</html>

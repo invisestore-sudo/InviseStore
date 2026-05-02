@@ -1,0 +1,2355 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>FinApp — Controle de gastos pessoais</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.0/chart.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+
+<script>
+  /* Configuração do Tailwind: tokens semânticos para tema claro/escuro */
+  tailwind.config = {
+    darkMode: 'class',
+    theme: {
+      extend: {
+        colors: {
+          bg:      'var(--bg)',
+          card:    'var(--card)',
+          border:  'var(--border)',
+          fg:      'var(--fg)',
+          muted:   'var(--muted)',
+          primary: 'var(--primary)',
+          success: 'var(--success)',
+          danger:  'var(--danger)',
+          accent:  'var(--accent)',
+        },
+      },
+    },
+  };
+</script>
+
+<style>
+  /* Tokens de design — claro e escuro */
+  :root {
+    --bg:      #f8fafc;
+    --card:    #ffffff;
+    --border:  #e2e8f0;
+    --fg:      #0f172a;
+    --muted:   #64748b;
+    --primary: #3b82f6;
+    --success: #22c55e;
+    --danger:  #ef4444;
+    --accent:  #f1f5f9;
+  }
+  .dark {
+    --bg:      #0b1220;
+    --card:    #111827;
+    --border:  #1f2937;
+    --fg:      #f1f5f9;
+    --muted:   #94a3b8;
+    --primary: #60a5fa;
+    --success: #4ade80;
+    --danger:  #f87171;
+    --accent:  #1e293b;
+  }
+
+  html, body { height: 100%; }
+  body {
+    background: var(--bg);
+    color: var(--fg);
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  /* Animações utilitárias */
+  @keyframes fade-in  { from { opacity: 0 } to { opacity: 1 } }
+  @keyframes slide-up { from { transform: translateY(8px); opacity: 0 } to { transform: translateY(0); opacity: 1 } }
+  .animate-fade-in  { animation: fade-in 200ms ease-out; }
+  .animate-slide-up { animation: slide-up 250ms ease-out; }
+
+  /* Scrollbar discreta */
+  ::-webkit-scrollbar { width: 8px; height: 8px; }
+  ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 4px; }
+  ::-webkit-scrollbar-thumb:hover { background: var(--muted); }
+
+  /* Esconde spinner do input number */
+  input[type=number]::-webkit-outer-spin-button,
+  input[type=number]::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
+  input[type=number] { -moz-appearance: textfield; }
+
+  /* Inputs base */
+  .field {
+    background: var(--card);
+    color: var(--fg);
+    border: 1px solid var(--border);
+    border-radius: 0.5rem;
+    padding: 0.5rem 0.75rem;
+    font-size: 0.875rem;
+    width: 100%;
+    transition: border-color 150ms, box-shadow 150ms;
+  }
+  .field:focus {
+    outline: none;
+    border-color: var(--primary);
+    box-shadow: 0 0 0 3px color-mix(in srgb, var(--primary) 20%, transparent);
+  }
+
+  /* Botões */
+  .btn {
+    display: inline-flex; align-items: center; justify-content: center; gap: 0.5rem;
+    padding: 0.5rem 1rem; border-radius: 0.5rem; font-size: 0.875rem; font-weight: 500;
+    transition: background-color 150ms, opacity 150ms, transform 100ms;
+    white-space: nowrap; cursor: pointer; border: 1px solid transparent;
+  }
+  .btn:active { transform: scale(0.98); }
+  .btn-primary { background: var(--primary); color: white; }
+  .btn-primary:hover { opacity: 0.9; }
+  .btn-outline { background: transparent; border-color: var(--border); color: var(--fg); }
+  .btn-outline:hover { background: var(--accent); }
+  .btn-ghost { background: transparent; color: var(--fg); }
+  .btn-ghost:hover { background: var(--accent); }
+  .btn-danger { color: var(--danger); background: transparent; }
+  .btn-danger:hover { background: color-mix(in srgb, var(--danger) 10%, transparent); }
+  .btn-icon { padding: 0.5rem; width: 2.25rem; height: 2.25rem; }
+
+  /* Cartões */
+  .card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 0.75rem;
+    box-shadow: 0 1px 2px rgba(0,0,0,0.04);
+  }
+
+  /* Modal */
+  .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.6); backdrop-filter: blur(2px); z-index: 50; }
+  .modal {
+    position: fixed; left: 50%; top: 50%; transform: translate(-50%, -50%);
+    width: calc(100% - 2rem); max-width: 520px; max-height: 92vh; overflow-y: auto;
+    background: var(--card); color: var(--fg);
+    border: 1px solid var(--border); border-radius: 0.75rem; padding: 1.5rem;
+    box-shadow: 0 20px 50px rgba(0,0,0,0.3); z-index: 51;
+  }
+
+  /* Toast */
+  .toast-container {
+    position: fixed; right: 1rem; bottom: 1rem; z-index: 100;
+    display: flex; flex-direction: column; gap: 0.5rem; max-width: 24rem; pointer-events: none;
+  }
+  .toast {
+    background: var(--card); border: 1px solid var(--border); border-radius: 0.5rem;
+    padding: 0.75rem 1rem; box-shadow: 0 10px 25px rgba(0,0,0,0.15); pointer-events: auto;
+    display: flex; align-items: flex-start; gap: 0.75rem;
+  }
+  .toast-success { border-color: color-mix(in srgb, var(--success) 40%, var(--border)); }
+  .toast-error   { border-color: color-mix(in srgb, var(--danger)  40%, var(--border)); }
+
+  /* Sidebar */
+  .nav-link {
+    display: flex; align-items: center; gap: 0.75rem;
+    padding: 0.5rem 0.75rem; border-radius: 0.5rem;
+    font-size: 0.875rem; font-weight: 500;
+    color: var(--muted); transition: background-color 150ms, color 150ms; cursor: pointer;
+  }
+  .nav-link:hover { background: var(--accent); color: var(--fg); }
+  .nav-link.active { background: color-mix(in srgb, var(--primary) 12%, transparent); color: var(--primary); }
+
+  /* Tabela */
+  .table { width: 100%; border-collapse: collapse; font-size: 0.875rem; }
+  .table thead { background: var(--accent); }
+  .table th { text-align: left; padding: 0.75rem 1rem; font-size: 0.75rem; text-transform: uppercase; color: var(--muted); font-weight: 500; }
+  .table td { padding: 0.75rem 1rem; border-top: 1px solid var(--border); }
+  .table tr.clickable:hover { background: color-mix(in srgb, var(--accent) 50%, transparent); cursor: pointer; }
+
+  /* Misc */
+  .badge {
+    display: inline-flex; align-items: center; gap: 0.25rem;
+    padding: 0.125rem 0.625rem; border-radius: 9999px;
+    font-size: 0.75rem; font-weight: 500; border: 1px solid var(--border);
+  }
+  .tabular { font-variant-numeric: tabular-nums; }
+  .ripple { background: color-mix(in srgb, var(--primary) 12%, transparent); color: var(--primary); }
+</style>
+</head>
+
+<body class="min-h-screen">
+
+<!-- ============================================================
+     INVISE GATE — login por chave única
+     ============================================================ -->
+<style>
+  #invise-gate { position: fixed; inset: 0; z-index: 99999; display: flex; align-items: center; justify-content: center; background: #0a0a0f; color: #f0f0f5; font-family: system-ui, -apple-system, Segoe UI, Roboto, sans-serif; padding: 20px; }
+  #invise-gate .ig-card { width: 100%; max-width: 420px; background: #13131e; border: 1px solid rgba(255,255,255,0.08); border-radius: 16px; padding: 28px; box-shadow: 0 20px 60px rgba(0,0,0,.4); }
+  #invise-gate h1 { margin: 0 0 6px; font-size: 22px; letter-spacing: -0.3px; }
+  #invise-gate h1 b { color: #6c63ff; }
+  #invise-gate p { margin: 0 0 18px; color: #9090a0; font-size: 14px; line-height: 1.5; }
+  #invise-gate input { width: 100%; background: #1a1a25; border: 1px solid rgba(255,255,255,0.08); color: #f0f0f5; border-radius: 10px; padding: 12px 14px; font-size: 15px; font-family: ui-monospace, Consolas, Menlo, monospace; letter-spacing: 1px; text-transform: uppercase; }
+  #invise-gate input:focus { outline: none; border-color: #6c63ff; }
+  #invise-gate button { width: 100%; margin-top: 12px; background: #6c63ff; color: #fff; border: 0; border-radius: 10px; padding: 12px; font-size: 15px; font-weight: 600; cursor: pointer; }
+  #invise-gate button:disabled { opacity: 0.6; cursor: wait; }
+  #invise-gate .ig-err { margin-top: 10px; padding: 10px 12px; background: rgba(239,68,68,0.1); border: 1px solid rgba(239,68,68,0.3); color: #fca5a5; border-radius: 8px; font-size: 13px; }
+  #invise-gate .ig-foot { margin-top: 18px; font-size: 12px; color: #9090a0; text-align: center; }
+  #invise-gate .ig-foot a { color: #6c63ff; text-decoration: none; }
+  body.invise-locked > :not(#invise-gate) { display: none !important; }
+</style>
+<div id="invise-gate">
+  <div class="ig-card">
+    <h1>Fin<b>App</b></h1>
+    <p>Digite sua chave única para entrar. Você recebe a chave após a compra na <a href="https://invisestore.com" style="color:#6c63ff;">InviseStore</a>.</p>
+    <form id="ig-form" autocomplete="off">
+      <input id="ig-key" placeholder="INVS-XXXX-XXXX-XXXX" required maxlength="24" />
+      <button type="submit" id="ig-submit">Entrar</button>
+      <div id="ig-err" class="ig-err" style="display:none;"></div>
+    </form>
+    <div class="ig-foot">Não tem chave? <a href="https://invisestore.com">Comprar agora</a></div>
+  </div>
+</div>
+<script>
+(function() {
+  // === CONFIG: troque para a URL do seu backend em produção ===
+  var INVISE_API = window.INVISE_API || 'https://SEU-BACKEND.onrender.com';
+  var APP_NAME = 'finapp';
+  var LS_KEY = 'invise.key';
+  var LS_USER = 'invise.user';
+
+  document.body.classList.add('invise-locked');
+
+  function deviceId() {
+    var d = localStorage.getItem('invise.device');
+    if (!d) { d = 'd_' + Math.random().toString(36).slice(2) + Date.now().toString(36); localStorage.setItem('invise.device', d); }
+    return d;
+  }
+  function userIdFromKey(k) {
+    // hash simples e estável p/ namespace de dados
+    var h = 0; for (var i = 0; i < k.length; i++) h = ((h<<5)-h) + k.charCodeAt(i) | 0;
+    return 'u' + Math.abs(h).toString(36);
+  }
+  function unlock(key) {
+    window.__INVISE_KEY = key;
+    window.__INVISE_USER = userIdFromKey(key);
+    localStorage.setItem(LS_KEY, key);
+    localStorage.setItem(LS_USER, window.__INVISE_USER);
+    document.body.classList.remove('invise-locked');
+    var g = document.getElementById('invise-gate'); if (g) g.remove();
+  }
+  function showErr(msg) {
+    var e = document.getElementById('ig-err'); if (!e) return;
+    e.textContent = msg; e.style.display = 'block';
+  }
+  async function validate(key, silent) {
+    try {
+      var r = await fetch(INVISE_API + '/api/validate-key', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ key: key, app: APP_NAME, deviceId: deviceId() })
+      });
+      var data = await r.json();
+      return data && data.valid === true ? data : null;
+    } catch (e) {
+      if (silent) return 'offline';
+      throw new Error('Sem conexão com o servidor.');
+    }
+  }
+
+  // Auto-login se já validou antes
+  var saved = localStorage.getItem(LS_KEY);
+  if (saved) {
+    // Aplica imediatamente o user p/ o boot poder usar localStorage namespace correto
+    window.__INVISE_KEY = saved;
+    window.__INVISE_USER = localStorage.getItem(LS_USER) || userIdFromKey(saved);
+    document.body.classList.remove('invise-locked');
+    var g0 = document.getElementById('invise-gate'); if (g0) g0.remove();
+    // Revalida em background; se inválida, força logout
+    validate(saved, true).then(function(res) {
+      if (res === 'offline' || res) return; // ok ou offline
+      localStorage.removeItem(LS_KEY);
+      alert('Sua chave foi revogada ou expirou. Faça login novamente.');
+      location.reload();
+    });
+    return;
+  }
+
+  document.getElementById('ig-form').addEventListener('submit', async function(ev) {
+    ev.preventDefault();
+    var btn = document.getElementById('ig-submit');
+    var input = document.getElementById('ig-key');
+    var key = (input.value || '').trim().toUpperCase();
+    if (!key) return;
+    btn.disabled = true; btn.textContent = 'Validando...';
+    document.getElementById('ig-err').style.display = 'none';
+    try {
+      var res = await validate(key, false);
+      if (!res) { showErr('Chave inválida, revogada ou para outro app.'); return; }
+      unlock(key);
+      location.reload();
+    } catch (e) {
+      showErr(e.message || 'Erro ao validar.');
+    } finally {
+      btn.disabled = false; btn.textContent = 'Entrar';
+    }
+  });
+})();
+</script>
+<!-- ============================================================
+     ESTRUTURA: Sidebar (desktop) + Topbar (mobile) + Main
+     ============================================================ -->
+
+<!-- Topbar mobile -->
+<header id="topbar" class="md:hidden sticky top-0 z-30 flex h-14 items-center justify-between gap-3 border-b border-border bg-bg/90 backdrop-blur px-4">
+  <button id="btn-menu" class="btn btn-ghost btn-icon" aria-label="Menu">☰</button>
+  <span class="font-semibold">Fin<span class="text-primary">App</span></span>
+  <button id="btn-theme-mobile" class="btn btn-ghost btn-icon" aria-label="Tema">🌓</button>
+</header>
+
+<!-- Sidebar desktop -->
+<aside id="sidebar" class="hidden md:flex md:fixed md:inset-y-0 md:left-0 md:w-64 md:flex-col bg-card border-r border-border z-20">
+  <div class="flex h-14 items-center justify-between border-b border-border px-6">
+    <span class="text-lg font-semibold">Fin<span class="text-primary">App</span></span>
+    <button id="btn-theme" class="btn btn-ghost btn-icon" aria-label="Alternar tema">🌓</button>
+  </div>
+  <nav id="nav" class="flex-1 overflow-y-auto p-4 space-y-1"></nav>
+  <p class="border-t border-border p-4 text-xs text-muted">v1.0 · feito com ♥</p>
+</aside>
+
+<!-- Drawer mobile (overlay) -->
+<div id="mobile-drawer" class="hidden fixed inset-0 z-50 md:hidden">
+  <div class="absolute inset-0 bg-black/60 animate-fade-in" data-close-drawer></div>
+  <aside class="absolute left-0 top-0 h-full w-72 bg-card p-4 shadow-xl animate-slide-up">
+    <div class="mb-6 flex items-center justify-between">
+      <span class="text-lg font-semibold">Fin<span class="text-primary">App</span></span>
+      <button class="btn btn-ghost btn-icon" data-close-drawer>✕</button>
+    </div>
+    <nav id="nav-mobile" class="space-y-1"></nav>
+  </aside>
+</div>
+
+<!-- Main -->
+<main class="md:pl-64">
+  <div id="page-root" class="mx-auto w-full max-w-7xl px-4 py-6 md:px-8"></div>
+</main>
+
+<!-- Toast container -->
+<div id="toasts" class="toast-container"></div>
+
+<!-- Modal root -->
+<div id="modal-root"></div>
+
+
+<!-- ============================================================
+     APLICAÇÃO — todo o JS abaixo é organizado em módulos lógicos:
+       1) Storage    — persistência em localStorage
+       2) State      — estado global e ações
+       3) Utils      — formatação, datas, IDs
+       4) Toast      — feedback visual
+       5) Modal      — sistema de modal genérico
+       6) Charts     — wrappers do Chart.js
+       7) ImportExp  — CSV/XLSX
+       8) Pages      — Dashboard, Transações, Categorias, Contas, Relatórios, Settings
+       9) Forms      — Diálogos de criação/edição
+      10) Router     — navegação simples por hash
+      11) Init       — bootstrapping
+     ============================================================ -->
+
+<script>
+/* ===========================================================
+   1) STORAGE — adapta localStorage com namespace e versionamento.
+   ============================================================ */
+const Storage = (() => {
+  const KEY = 'finapp.v1.' + (window.__INVISE_USER || 'anon');
+
+  // Estrutura inicial do banco. Identidade dos dados parecida com o esquema Prisma.
+  const seed = () => ({
+    accounts: [
+      { id: id(), name: 'Pessoal', description: 'Conta principal', color: '#3b82f6', isDefault: true, createdAt: now() },
+    ],
+    categories: [
+      // Gastos
+      { id: id(), name: 'Alimentação', type: 'EXPENSE', color: '#ef4444', icon: '🍽️' },
+      { id: id(), name: 'Transporte',  type: 'EXPENSE', color: '#f97316', icon: '🚗' },
+      { id: id(), name: 'Moradia',     type: 'EXPENSE', color: '#eab308', icon: '🏠' },
+      { id: id(), name: 'Saúde',       type: 'EXPENSE', color: '#22c55e', icon: '❤️' },
+      { id: id(), name: 'Lazer',       type: 'EXPENSE', color: '#06b6d4', icon: '🎮' },
+      { id: id(), name: 'Educação',    type: 'EXPENSE', color: '#3b82f6', icon: '🎓' },
+      { id: id(), name: 'Compras',     type: 'EXPENSE', color: '#a855f7', icon: '🛍️' },
+      { id: id(), name: 'Assinaturas', type: 'EXPENSE', color: '#ec4899', icon: '🔁' },
+      { id: id(), name: 'Outros',      type: 'EXPENSE', color: '#6b7280', icon: '📦' },
+      // Receitas
+      { id: id(), name: 'Salário',       type: 'INCOME', color: '#22c55e', icon: '💼' },
+      { id: id(), name: 'Freelance',     type: 'INCOME', color: '#3b82f6', icon: '💻' },
+      { id: id(), name: 'Investimentos', type: 'INCOME', color: '#a855f7', icon: '📈' },
+      { id: id(), name: 'Presente',      type: 'INCOME', color: '#ec4899', icon: '🎁' },
+      { id: id(), name: 'Outros',        type: 'INCOME', color: '#6b7280', icon: '➕' },
+    ],
+    tags: [
+      { id: id(), name: 'essencial',    color: '#ef4444' },
+      { id: id(), name: 'supérfluo',    color: '#f97316' },
+      { id: id(), name: 'reembolsável', color: '#22c55e' },
+      { id: id(), name: 'recorrente',   color: '#3b82f6' },
+    ],
+    transactions: [],
+    settings: {
+      theme: 'system',           // 'light' | 'dark' | 'system'
+      selectedAccountId: null,   // null = todas
+    },
+  });
+
+  function id() {
+    return Math.random().toString(36).slice(2, 10) + Date.now().toString(36).slice(-4);
+  }
+  function now() { return new Date().toISOString(); }
+
+  function load() {
+    try {
+      const raw = localStorage.getItem(KEY);
+      if (!raw) {
+        const initial = seed();
+        save(initial);
+        return initial;
+      }
+      const parsed = JSON.parse(raw);
+      // Garantia de chaves em caso de versões antigas
+      const fresh = seed();
+      return { ...fresh, ...parsed, settings: { ...fresh.settings, ...(parsed.settings || {}) } };
+    } catch (e) {
+      console.error('Falha ao ler storage, recriando:', e);
+      const initial = seed();
+      save(initial);
+      return initial;
+    }
+  }
+
+  function save(data) {
+    try {
+      localStorage.setItem(KEY, JSON.stringify(data));
+    } catch (e) {
+      console.error('Falha ao salvar storage:', e);
+    }
+  }
+
+  function reset() {
+    localStorage.removeItem(KEY);
+  }
+
+  return { load, save, reset, id, now };
+})();
+
+/* ===========================================================
+   2) STATE — pequena store reativa. Componentes assinam mudanças.
+   ============================================================ */
+const State = (() => {
+  let data = Storage.load();
+  const listeners = new Set();
+
+  function get() { return data; }
+  function subscribe(fn) { listeners.add(fn); return () => listeners.delete(fn); }
+  function notify() { for (const fn of listeners) fn(data); }
+
+  function update(mutator) {
+    const next = typeof mutator === 'function' ? mutator(data) : mutator;
+    data = next;
+    Storage.save(data);
+    notify();
+  }
+
+  /* ---- Ações específicas, ergonômicas para os componentes ---- */
+
+  const actions = {
+    // Configurações
+    setTheme(theme) { update(d => ({ ...d, settings: { ...d.settings, theme } })); applyTheme(); },
+    setSelectedAccount(accountId) { update(d => ({ ...d, settings: { ...d.settings, selectedAccountId: accountId } })); },
+
+    // Contas
+    addAccount(payload) {
+      update(d => {
+        const account = { id: Storage.id(), createdAt: Storage.now(), ...payload };
+        let accounts = [...d.accounts, account];
+        if (account.isDefault) accounts = accounts.map(a => a.id === account.id ? a : { ...a, isDefault: false });
+        return { ...d, accounts };
+      });
+    },
+    updateAccount(id, payload) {
+      update(d => {
+        let accounts = d.accounts.map(a => a.id === id ? { ...a, ...payload } : a);
+        if (payload.isDefault) accounts = accounts.map(a => a.id === id ? a : { ...a, isDefault: false });
+        return { ...d, accounts };
+      });
+    },
+    deleteAccount(id) {
+      update(d => {
+        if (d.accounts.length <= 1) throw new Error('Você precisa ter pelo menos uma conta.');
+        // Remove conta e suas transações (cascade)
+        return {
+          ...d,
+          accounts: d.accounts.filter(a => a.id !== id),
+          transactions: d.transactions.filter(t => t.accountId !== id),
+        };
+      });
+    },
+
+    // Categorias
+    addCategory(payload) {
+      update(d => {
+        const exists = d.categories.some(c => c.name === payload.name && c.type === payload.type);
+        if (exists) throw new Error('Já existe uma categoria com esse nome e tipo.');
+        return { ...d, categories: [...d.categories, { id: Storage.id(), ...payload }] };
+      });
+    },
+    updateCategory(id, payload) {
+      update(d => ({ ...d, categories: d.categories.map(c => c.id === id ? { ...c, ...payload } : c) }));
+    },
+    deleteCategory(id) {
+      update(d => {
+        const used = d.transactions.filter(t => t.categoryId === id).length;
+        if (used > 0) throw new Error(`Não é possível remover: ${used} transação(ões) usam esta categoria.`);
+        return { ...d, categories: d.categories.filter(c => c.id !== id) };
+      });
+    },
+
+    // Tags
+    addTag(payload) {
+      update(d => {
+        const name = payload.name.trim().toLowerCase();
+        if (d.tags.some(t => t.name === name)) throw new Error('Tag com esse nome já existe.');
+        return { ...d, tags: [...d.tags, { id: Storage.id(), ...payload, name }] };
+      });
+    },
+    deleteTag(id) {
+      update(d => ({
+        ...d,
+        tags: d.tags.filter(t => t.id !== id),
+        transactions: d.transactions.map(t => ({ ...t, tagIds: (t.tagIds || []).filter(x => x !== id) })),
+      }));
+    },
+    upsertTagByName(name, color = '#8b5cf6') {
+      const normalized = name.trim().toLowerCase();
+      const existing = data.tags.find(t => t.name === normalized);
+      if (existing) return existing.id;
+      const newTag = { id: Storage.id(), name: normalized, color };
+      update(d => ({ ...d, tags: [...d.tags, newTag] }));
+      return newTag.id;
+    },
+
+    // Transações
+    addTransaction(payload) {
+      update(d => ({
+        ...d,
+        transactions: [...d.transactions, { id: Storage.id(), createdAt: Storage.now(), ...payload }],
+      }));
+    },
+    updateTransaction(id, payload) {
+      update(d => ({
+        ...d,
+        transactions: d.transactions.map(t => t.id === id ? { ...t, ...payload } : t),
+      }));
+    },
+    deleteTransaction(id) {
+      update(d => ({ ...d, transactions: d.transactions.filter(t => t.id !== id) }));
+    },
+
+    // Reset total
+    resetAll() {
+      Storage.reset();
+      data = Storage.load();
+      notify();
+    },
+
+    // Importar dados completos (export → import)
+    importBackup(backup) {
+      if (!backup || typeof backup !== 'object') throw new Error('Backup inválido');
+      update(() => ({ ...Storage.load(), ...backup }));
+    },
+  };
+
+  return { get, subscribe, update, actions };
+})();
+
+/* ===========================================================
+   3) UTILS — formatação e helpers diversos.
+   ============================================================ */
+const Utils = (() => {
+  const BRL = new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' });
+  const dateFormatter = new Intl.DateTimeFormat('pt-BR', { day: '2-digit', month: '2-digit', year: 'numeric' });
+
+  function formatCurrency(v) { return BRL.format(Number(v) || 0); }
+  function formatDate(date) { return dateFormatter.format(typeof date === 'string' ? new Date(date) : date); }
+
+  function getMonthRange(ref = new Date()) {
+    const start = new Date(ref.getFullYear(), ref.getMonth(), 1);
+    const end = new Date(ref.getFullYear(), ref.getMonth() + 1, 0, 23, 59, 59, 999);
+    return { start, end };
+  }
+
+  function toDate(d) { return typeof d === 'string' ? new Date(d) : d; }
+
+  function toNumber(v, fallback = 0) {
+    if (typeof v === 'number' && !isNaN(v)) return v;
+    if (typeof v === 'string') {
+      // Aceita "1.234,56" e "1234.56"
+      const cleaned = v.replace(/\./g, '').replace(',', '.');
+      const n = parseFloat(cleaned);
+      return isNaN(n) ? fallback : n;
+    }
+    return fallback;
+  }
+
+  function escapeHtml(s) {
+    return String(s ?? '').replace(/[&<>"']/g, ch =>
+      ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[ch]),
+    );
+  }
+
+  // Tag helper para HTML inline com escape — uso: html`<p>${user.name}</p>`
+  function html(strings, ...values) {
+    return strings.reduce((out, str, i) => {
+      const v = values[i];
+      if (v === undefined || v === null) return out + str;
+      // Permite passar fragmentos brutos com {raw: '...'}
+      if (typeof v === 'object' && v.raw) return out + str + v.raw;
+      if (Array.isArray(v)) return out + str + v.join('');
+      return out + str + escapeHtml(v);
+    }, '');
+  }
+
+  return { formatCurrency, formatDate, getMonthRange, toDate, toNumber, escapeHtml, html };
+})();
+
+/* ===========================================================
+   4) TOAST — feedback visual leve.
+   ============================================================ */
+const Toast = (() => {
+  function push({ title, description = '', variant = 'default', duration = 3500 }) {
+    const root = document.getElementById('toasts');
+    const el = document.createElement('div');
+    el.className = `toast animate-slide-up ${variant === 'success' ? 'toast-success' : ''} ${variant === 'error' ? 'toast-error' : ''}`;
+    const icon = variant === 'success' ? '✓' : variant === 'error' ? '✕' : '•';
+    const iconColor = variant === 'success' ? 'var(--success)' : variant === 'error' ? 'var(--danger)' : 'var(--muted)';
+    el.innerHTML = `
+      <span style="color:${iconColor}; font-weight:bold; font-size:1.125rem; line-height:1;">${icon}</span>
+      <div class="flex-1 min-w-0">
+        <p class="text-sm font-medium">${Utils.escapeHtml(title)}</p>
+        ${description ? `<p class="text-xs text-muted mt-0.5">${Utils.escapeHtml(description)}</p>` : ''}
+      </div>
+      <button class="text-muted hover:text-fg" aria-label="Fechar">✕</button>
+    `;
+    el.querySelector('button').onclick = () => el.remove();
+    root.appendChild(el);
+    setTimeout(() => el.remove(), duration);
+  }
+  return {
+    success: (title, description) => push({ title, description, variant: 'success' }),
+    error:   (title, description) => push({ title, description, variant: 'error' }),
+    info:    (title, description) => push({ title, description }),
+  };
+})();
+
+/* ===========================================================
+   5) MODAL — abertura/fechamento de modais customizáveis.
+   ============================================================ */
+const Modal = (() => {
+  let onClose = null;
+
+  function open({ render, onCloseCallback }) {
+    const root = document.getElementById('modal-root');
+    onClose = onCloseCallback || null;
+
+    root.innerHTML = `
+      <div class="modal-overlay animate-fade-in" data-modal-close></div>
+      <div class="modal animate-slide-up" role="dialog" aria-modal="true">
+        ${render()}
+      </div>
+    `;
+    document.body.style.overflow = 'hidden';
+    root.querySelector('[data-modal-close]').onclick = close;
+    // ESC fecha
+    document.addEventListener('keydown', escListener);
+  }
+
+  function close() {
+    const root = document.getElementById('modal-root');
+    root.innerHTML = '';
+    document.body.style.overflow = '';
+    document.removeEventListener('keydown', escListener);
+    if (onClose) onClose();
+    onClose = null;
+  }
+
+  function escListener(e) { if (e.key === 'Escape') close(); }
+
+  function content() { return document.querySelector('#modal-root .modal'); }
+
+  return { open, close, content };
+})();
+
+/* ===========================================================
+   6) CHARTS — wrappers do Chart.js que respeitam o tema.
+   ============================================================ */
+const Charts = (() => {
+  const instances = new Map();
+
+  function destroy(canvasId) {
+    if (instances.has(canvasId)) {
+      instances.get(canvasId).destroy();
+      instances.delete(canvasId);
+    }
+  }
+
+  function pie(canvasId, items) {
+    destroy(canvasId);
+    const canvas = document.getElementById(canvasId);
+    if (!canvas) return;
+    if (!items.length) {
+      canvas.parentElement.innerHTML = '<div class="flex h-[280px] items-center justify-center text-sm text-muted">Sem dados no período</div>';
+      return;
+    }
+    const fg = getCssVar('--fg');
+    const ctx = canvas.getContext('2d');
+    instances.set(canvasId, new Chart(ctx, {
+      type: 'doughnut',
+      data: {
+        labels: items.map(i => i.categoryName),
+        datasets: [{
+          data: items.map(i => i.total),
+          backgroundColor: items.map(i => i.color),
+          borderColor: getCssVar('--card'),
+          borderWidth: 2,
+        }],
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        cutout: '60%',
+        plugins: {
+          legend: {
+            position: 'bottom',
+            labels: { color: fg, font: { size: 11 }, boxWidth: 10, padding: 12 },
+          },
+          tooltip: {
+            callbacks: {
+              label: (ctx) => {
+                const item = items[ctx.dataIndex];
+                return `${item.categoryName}: ${Utils.formatCurrency(item.total)} (${item.percentage.toFixed(1)}%)`;
+              },
+            },
+          },
+        },
+      },
+    }));
+  }
+
+  function line(canvasId, series) {
+    destroy(canvasId);
+    const canvas = document.getElementById(canvasId);
+    if (!canvas) return;
+    if (!series.length) {
+      canvas.parentElement.innerHTML = '<div class="flex h-[280px] items-center justify-center text-sm text-muted">Sem dados no período</div>';
+      return;
+    }
+    const fg = getCssVar('--fg');
+    const muted = getCssVar('--muted');
+    const border = getCssVar('--border');
+    const ctx = canvas.getContext('2d');
+
+    const labels = series.map(p => {
+      const [y, m, d] = p.date.split('-');
+      return `${d}/${m}`;
+    });
+
+    instances.set(canvasId, new Chart(ctx, {
+      type: 'line',
+      data: {
+        labels,
+        datasets: [
+          { label: 'Receitas',         data: series.map(p => p.income),  borderColor: getCssVar('--success'), backgroundColor: 'transparent', tension: 0.3, borderWidth: 2, pointRadius: 0 },
+          { label: 'Gastos',           data: series.map(p => p.expense), borderColor: getCssVar('--danger'),  backgroundColor: 'transparent', tension: 0.3, borderWidth: 2, pointRadius: 0 },
+          { label: 'Saldo acumulado',  data: series.map(p => p.balance), borderColor: getCssVar('--primary'), backgroundColor: 'transparent', tension: 0.3, borderWidth: 2, borderDash: [4, 4], pointRadius: 0 },
+        ],
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        interaction: { mode: 'index', intersect: false },
+        plugins: {
+          legend: { position: 'top', labels: { color: fg, boxWidth: 14, font: { size: 11 } } },
+          tooltip: {
+            callbacks: {
+              label: (ctx) => `${ctx.dataset.label}: ${Utils.formatCurrency(ctx.parsed.y)}`,
+            },
+          },
+        },
+        scales: {
+          x: { ticks: { color: muted, font: { size: 10 } }, grid: { color: border, display: false } },
+          y: {
+            ticks: { color: muted, font: { size: 10 }, callback: v => 'R$' + (v / 1000).toFixed(0) + 'k' },
+            grid: { color: border },
+          },
+        },
+      },
+    }));
+  }
+
+  function getCssVar(name) {
+    return getComputedStyle(document.documentElement).getPropertyValue(name).trim();
+  }
+
+  return { pie, line, destroy };
+})();
+
+/* ===========================================================
+   7) IMPORT / EXPORT — CSV e XLSX.
+   ============================================================ */
+const ImportExport = (() => {
+  const HEADER_ALIASES = {
+    valor: 'amount', amount: 'amount', value: 'amount', preco: 'amount', 'preço': 'amount',
+    'descricao': 'description', 'descrição': 'description', description: 'description', desc: 'description',
+    data: 'date', date: 'date',
+    tipo: 'type', type: 'type',
+    categoria: 'category', category: 'category',
+    conta: 'account', account: 'account',
+    tags: 'tags', etiquetas: 'tags',
+    notas: 'notes', 'observacoes': 'notes', 'observações': 'notes', notes: 'notes',
+  };
+
+  function normalizeHeader(h) { return String(h ?? '').trim().toLowerCase(); }
+  function normalizeRow(raw) {
+    const out = {};
+    for (const [k, v] of Object.entries(raw)) {
+      const canonical = HEADER_ALIASES[normalizeHeader(k)];
+      if (canonical) out[canonical] = v;
+    }
+    return out;
+  }
+
+  function parseType(value) {
+    const s = String(value ?? '').trim().toLowerCase();
+    if (['receita', 'income', 'in', 'entrada', '+'].includes(s)) return 'INCOME';
+    return 'EXPENSE';
+  }
+
+  function parseDate(value) {
+    if (value instanceof Date) return value;
+    if (typeof value === 'number') {
+      // Excel serial date
+      return new Date(Math.round((value - 25569) * 86400 * 1000));
+    }
+    const s = String(value ?? '').trim();
+    if (!s) return new Date();
+    const br = s.match(/^(\d{2})\/(\d{2})\/(\d{4})$/);
+    if (br) return new Date(`${br[3]}-${br[2]}-${br[1]}`);
+    const d = new Date(s);
+    if (isNaN(d.getTime())) throw new Error(`Data inválida: "${s}"`);
+    return d;
+  }
+
+  async function parseFile(file) {
+    const ext = file.name.toLowerCase().split('.').pop();
+    if (ext === 'csv') {
+      const text = await file.text();
+      return new Promise(resolve => {
+        Papa.parse(text, {
+          header: true,
+          skipEmptyLines: true,
+          transformHeader: h => h.trim(),
+          complete: (res) => resolve(res.data),
+        });
+      });
+    }
+    // XLSX
+    const buffer = await file.arrayBuffer();
+    const wb = XLSX.read(buffer, { type: 'array', cellDates: true });
+    const sheet = wb.Sheets[wb.SheetNames[0]];
+    return XLSX.utils.sheet_to_json(sheet, { defval: '' });
+  }
+
+  async function importFromFile(file) {
+    const rows = await parseFile(file);
+    const result = { imported: 0, skipped: 0, errors: [] };
+    const data = State.get();
+    const defaultAccount = data.accounts.find(a => a.isDefault) ?? data.accounts[0];
+    if (!defaultAccount) throw new Error('Nenhuma conta cadastrada.');
+
+    const accountByName = new Map(data.accounts.map(a => [a.name.toLowerCase(), a]));
+    // mapa categorias por (nome|tipo)
+    const catKey = (name, type) => `${String(name).toLowerCase()}|${type}`;
+    const categoryMap = new Map(data.categories.map(c => [catKey(c.name, c.type), c]));
+
+    for (let i = 0; i < rows.length; i++) {
+      const rowNum = i + 2; // +1 header, +1 1-based
+      try {
+        const r = normalizeRow(rows[i]);
+        if (r.amount == null && !r.description) { result.skipped++; continue; }
+
+        const type = parseType(r.type);
+        const amount = Math.abs(Utils.toNumber(r.amount));
+        if (!amount) throw new Error('Valor zero ou inválido');
+
+        const date = parseDate(r.date ?? new Date());
+        const description = String(r.description ?? '').trim();
+        if (!description) throw new Error('Descrição vazia');
+
+        // Conta
+        const accountName = String(r.account ?? '').toLowerCase();
+        const account = accountByName.get(accountName) ?? defaultAccount;
+
+        // Categoria — cria se não existir
+        const categoryName = String(r.category ?? 'Outros').trim();
+        const key = catKey(categoryName, type);
+        let category = categoryMap.get(key);
+        if (!category) {
+          State.actions.addCategory({ name: categoryName, type, color: '#6b7280', icon: '🏷️' });
+          // Recarrega para pegar o novo id
+          category = State.get().categories.find(c => c.name === categoryName && c.type === type);
+          categoryMap.set(key, category);
+        }
+
+        // Tags
+        const tagIds = [];
+        if (r.tags) {
+          const names = String(r.tags).split(/[,;\s]+/).map(s => s.trim()).filter(Boolean);
+          for (const n of names) tagIds.push(State.actions.upsertTagByName(n));
+        }
+
+        State.actions.addTransaction({
+          amount, description,
+          date: date.toISOString(),
+          type,
+          notes: r.notes ? String(r.notes) : '',
+          categoryId: category.id,
+          accountId: account.id,
+          tagIds,
+        });
+        result.imported++;
+      } catch (err) {
+        result.errors.push({ row: rowNum, message: err.message || 'Erro desconhecido' });
+        result.skipped++;
+      }
+    }
+    return result;
+  }
+
+  function buildExportRows(transactions) {
+    const data = State.get();
+    const cats = new Map(data.categories.map(c => [c.id, c]));
+    const accs = new Map(data.accounts.map(a => [a.id, a]));
+    const tags = new Map(data.tags.map(t => [t.id, t]));
+    return transactions.map(t => ({
+      Data: typeof t.date === 'string' ? t.date.slice(0, 10) : new Date(t.date).toISOString().slice(0, 10),
+      Tipo: t.type === 'INCOME' ? 'Receita' : 'Gasto',
+      Valor: t.amount.toFixed(2),
+      'Descrição': t.description,
+      Categoria: cats.get(t.categoryId)?.name ?? '',
+      Conta: accs.get(t.accountId)?.name ?? '',
+      Tags: (t.tagIds || []).map(id => tags.get(id)?.name).filter(Boolean).join(', '),
+      Notas: t.notes ?? '',
+    }));
+  }
+
+  function exportCSV(transactions, filename = 'transacoes.csv') {
+    const csv = Papa.unparse(buildExportRows(transactions));
+    download('\uFEFF' + csv, filename, 'text/csv;charset=utf-8');
+  }
+
+  function exportXLSX(transactions, filename = 'transacoes.xlsx') {
+    const ws = XLSX.utils.json_to_sheet(buildExportRows(transactions));
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, 'Transações');
+    XLSX.writeFile(wb, filename);
+  }
+
+  function exportBackupJSON() {
+    const data = State.get();
+    const blob = JSON.stringify(data, null, 2);
+    download(blob, `finapp-backup-${new Date().toISOString().slice(0, 10)}.json`, 'application/json');
+  }
+
+  function download(content, filename, mime) {
+    const blob = new Blob([content], { type: mime });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url; a.download = filename; a.click();
+    setTimeout(() => URL.revokeObjectURL(url), 1000);
+  }
+
+  return { importFromFile, exportCSV, exportXLSX, exportBackupJSON };
+})();
+
+/* ===========================================================
+   8) ANALYTICS — agregações usadas pelo dashboard e relatórios.
+   ============================================================ */
+const Analytics = (() => {
+
+  function applyAccountFilter(transactions, accountId) {
+    return accountId ? transactions.filter(t => t.accountId === accountId) : transactions;
+  }
+
+  function inRange(transactions, start, end) {
+    return transactions.filter(t => {
+      const d = new Date(t.date);
+      return d >= start && d <= end;
+    });
+  }
+
+  function summary(transactions) {
+    let totalIncome = 0, totalExpense = 0;
+    for (const t of transactions) {
+      if (t.type === 'INCOME') totalIncome += t.amount;
+      else totalExpense += t.amount;
+    }
+    return {
+      totalIncome,
+      totalExpense,
+      balance: totalIncome - totalExpense,
+      count: transactions.length,
+    };
+  }
+
+  function byCategory(transactions, type) {
+    const data = State.get();
+    const cats = new Map(data.categories.map(c => [c.id, c]));
+    const map = new Map();
+    let total = 0;
+    for (const t of transactions) {
+      if (t.type !== type) continue;
+      const cur = map.get(t.categoryId) || { total: 0, count: 0 };
+      cur.total += t.amount;
+      cur.count += 1;
+      map.set(t.categoryId, cur);
+      total += t.amount;
+    }
+    return Array.from(map.entries())
+      .map(([categoryId, v]) => {
+        const c = cats.get(categoryId);
+        return {
+          categoryId,
+          categoryName: c?.name ?? '—',
+          color: c?.color ?? '#6b7280',
+          icon: c?.icon ?? '🏷️',
+          total: v.total,
+          count: v.count,
+          percentage: total > 0 ? (v.total / total) * 100 : 0,
+        };
+      })
+      .sort((a, b) => b.total - a.total);
+  }
+
+  function timeSeries(transactions) {
+    const map = new Map();
+    for (const t of transactions) {
+      const key = new Date(t.date).toISOString().slice(0, 10);
+      const cur = map.get(key) || { income: 0, expense: 0 };
+      if (t.type === 'INCOME') cur.income += t.amount;
+      else cur.expense += t.amount;
+      map.set(key, cur);
+    }
+    let cumulative = 0;
+    return Array.from(map.entries())
+      .sort(([a], [b]) => a.localeCompare(b))
+      .map(([date, v]) => {
+        cumulative += v.income - v.expense;
+        return { date, income: v.income, expense: v.expense, balance: cumulative };
+      });
+  }
+
+  function monthlyAverages(transactions, months = 6) {
+    const since = new Date();
+    since.setMonth(since.getMonth() - months);
+    since.setDate(1);
+    since.setHours(0, 0, 0, 0);
+
+    const filtered = transactions.filter(t => new Date(t.date) >= since);
+    const buckets = new Map();
+    for (const t of filtered) {
+      const d = new Date(t.date);
+      const key = `${d.getFullYear()}-${d.getMonth() + 1}`;
+      const cur = buckets.get(key) || { income: 0, expense: 0 };
+      if (t.type === 'INCOME') cur.income += t.amount;
+      else cur.expense += t.amount;
+      buckets.set(key, cur);
+    }
+    const n = buckets.size || 1;
+    let income = 0, expense = 0;
+    for (const v of buckets.values()) { income += v.income; expense += v.expense; }
+    return {
+      avgIncome: income / n,
+      avgExpense: expense / n,
+      avgBalance: (income - expense) / n,
+      monthsConsidered: buckets.size,
+    };
+  }
+
+  return { applyAccountFilter, inRange, summary, byCategory, timeSeries, monthlyAverages };
+})();
+
+/* ===========================================================
+   9) NAV — itens da sidebar e roteamento simples por hash.
+   ============================================================ */
+const NAV_ITEMS = [
+  { hash: '#/dashboard',    label: 'Dashboard',         icon: '📊' },
+  { hash: '#/transactions', label: 'Transações',        icon: '📋' },
+  { hash: '#/categories',   label: 'Categorias',        icon: '🏷️' },
+  { hash: '#/accounts',     label: 'Contas',            icon: '👛' },
+  { hash: '#/reports',      label: 'Relatórios',        icon: '📈' },
+  { hash: '#/settings',     label: 'Importar/Exportar', icon: '⚙️' },
+];
+
+function renderNav() {
+  const current = location.hash || '#/dashboard';
+  const items = NAV_ITEMS.map(item => `
+    <a href="${item.hash}" class="nav-link ${current === item.hash ? 'active' : ''}">
+      <span style="font-size:1rem;">${item.icon}</span>
+      <span>${item.label}</span>
+    </a>
+  `).join('');
+  document.getElementById('nav').innerHTML = items;
+  document.getElementById('nav-mobile').innerHTML = items;
+}
+
+/* ===========================================================
+   10) PAGES — cada função renderiza uma view completa.
+   Todas escrevem em #page-root e usam delegação de eventos.
+   ============================================================ */
+
+const { html, escapeHtml, formatCurrency, formatDate } = Utils;
+
+/* ---------- DASHBOARD ---------- */
+function renderDashboard() {
+  const root = document.getElementById('page-root');
+  const data = State.get();
+  const range = Utils.getMonthRange();
+  const accountId = data.settings.selectedAccountId;
+
+  let txs = Analytics.applyAccountFilter(data.transactions, accountId);
+  const monthTxs = Analytics.inRange(txs, range.start, range.end);
+  const summary = Analytics.summary(monthTxs);
+  const expenses = Analytics.byCategory(monthTxs, 'EXPENSE');
+  const series = Analytics.timeSeries(monthTxs);
+  const averages = Analytics.monthlyAverages(txs, 6);
+
+  // 8 últimas transações da conta selecionada
+  const latest = [...txs]
+    .sort((a, b) => new Date(b.date) - new Date(a.date))
+    .slice(0, 8);
+
+  const accountOptions = ['<option value="">Todas as contas</option>']
+    .concat(data.accounts.map(a => `<option value="${a.id}" ${accountId === a.id ? 'selected' : ''}>${escapeHtml(a.name)}</option>`))
+    .join('');
+
+  root.innerHTML = `
+    <div class="space-y-6">
+      <div class="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
+        <div>
+          <h1 class="text-2xl font-bold tracking-tight">Dashboard</h1>
+          <p class="text-sm text-muted">Visão geral do mês corrente</p>
+        </div>
+        <div class="flex flex-wrap items-center gap-2">
+          <select id="dash-account" class="field" style="width:auto; min-width:180px;">${accountOptions}</select>
+          <button id="dash-add" class="btn btn-primary">+ Nova transação</button>
+        </div>
+      </div>
+
+      <!-- KPIs -->
+      <div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+        ${kpiCard('💰', 'Receitas', summary.totalIncome, 'success')}
+        ${kpiCard('💸', 'Gastos', summary.totalExpense, 'danger')}
+        ${kpiCard('⚖️', 'Saldo', summary.balance, summary.balance >= 0 ? 'success' : 'danger')}
+        ${kpiCard('📊', `Média ${averages.monthsConsidered}m`, averages.avgBalance, 'primary', 'saldo médio mensal')}
+      </div>
+
+      <!-- Gráficos -->
+      <div class="grid gap-6 lg:grid-cols-3">
+        <div class="card lg:col-span-2 p-6">
+          <h3 class="font-semibold mb-1">Evolução no período</h3>
+          <p class="text-sm text-muted mb-4">Receitas, gastos e saldo acumulado</p>
+          <div style="position:relative; height:300px;"><canvas id="chart-line"></canvas></div>
+        </div>
+        <div class="card p-6">
+          <h3 class="font-semibold mb-1">Gastos por categoria</h3>
+          <p class="text-sm text-muted mb-4">Distribuição percentual</p>
+          <div style="position:relative; height:300px;"><canvas id="chart-pie"></canvas></div>
+        </div>
+      </div>
+
+      <!-- Últimas transações -->
+      <div class="card p-6">
+        <div class="flex items-center justify-between mb-4">
+          <div>
+            <h3 class="font-semibold">Últimas transações</h3>
+            <p class="text-sm text-muted">${latest.length} mais recentes</p>
+          </div>
+        </div>
+        ${latest.length === 0 ? `
+          <div class="flex flex-col items-center gap-3 py-10 text-center">
+            <p class="text-sm text-muted">Nenhuma transação ainda. Que tal começar?</p>
+            <button id="dash-empty-add" class="btn btn-primary">+ Adicionar</button>
+          </div>
+        ` : `
+          <ul class="divide-y divide-border">
+            ${latest.map(tx => transactionListItem(tx)).join('')}
+          </ul>
+        `}
+      </div>
+    </div>
+  `;
+
+  // Bindings
+  document.getElementById('dash-account').onchange = (e) => {
+    State.actions.setSelectedAccount(e.target.value || null);
+  };
+  document.getElementById('dash-add').onclick = () => openTransactionDialog();
+  document.getElementById('dash-empty-add')?.addEventListener('click', () => openTransactionDialog());
+
+  // Click nas transações
+  root.querySelectorAll('[data-tx-id]').forEach(el => {
+    el.onclick = () => openTransactionDialog(el.dataset.txId);
+  });
+
+  // Charts
+  Charts.line('chart-line', series);
+  Charts.pie('chart-pie', expenses);
+}
+
+function kpiCard(icon, label, value, tone, description) {
+  const colorMap = {
+    success: 'color: var(--success); background: color-mix(in srgb, var(--success) 15%, transparent);',
+    danger:  'color: var(--danger); background: color-mix(in srgb, var(--danger) 15%, transparent);',
+    primary: 'color: var(--primary); background: color-mix(in srgb, var(--primary) 15%, transparent);',
+  };
+  return `
+    <div class="card p-6 flex items-center gap-4">
+      <div class="flex h-12 w-12 items-center justify-center rounded-full text-xl" style="${colorMap[tone]}">${icon}</div>
+      <div class="min-w-0">
+        <p class="text-xs uppercase tracking-wide text-muted">${escapeHtml(label)}</p>
+        <p class="text-xl font-bold tabular truncate">${formatCurrency(value)}</p>
+        ${description ? `<p class="text-xs text-muted">${escapeHtml(description)}</p>` : ''}
+      </div>
+    </div>
+  `;
+}
+
+function transactionListItem(tx) {
+  const data = State.get();
+  const cat = data.categories.find(c => c.id === tx.categoryId);
+  const acc = data.accounts.find(a => a.id === tx.accountId);
+  const sign = tx.type === 'INCOME' ? '+' : '−';
+  const color = tx.type === 'INCOME' ? 'var(--success)' : 'var(--danger)';
+  return `
+    <li data-tx-id="${tx.id}" class="flex cursor-pointer items-center gap-3 py-3 px-2 -mx-2 rounded hover:bg-accent/50">
+      <div class="flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-base"
+           style="background:${cat?.color}20; color:${cat?.color};">${cat?.icon ?? '📦'}</div>
+      <div class="min-w-0 flex-1">
+        <p class="truncate text-sm font-medium">${escapeHtml(tx.description)}</p>
+        <p class="text-xs text-muted">${escapeHtml(cat?.name ?? '—')} · ${escapeHtml(acc?.name ?? '—')} · ${formatDate(tx.date)}</p>
+      </div>
+      <div class="shrink-0 text-sm font-semibold tabular" style="color:${color};">${sign} ${formatCurrency(tx.amount)}</div>
+    </li>
+  `;
+}
+
+/* ---------- TRANSACTIONS ---------- */
+let _txFilters = { search: '', type: 'all', categoryId: 'all', accountId: 'all', startDate: '', endDate: '' };
+let _txSearchTimer = null;
+
+function renderTransactions() {
+  const root = document.getElementById('page-root');
+  const data = State.get();
+  let items = data.transactions.slice();
+
+  // Aplica filtros
+  if (_txFilters.type !== 'all')       items = items.filter(t => t.type === _txFilters.type);
+  if (_txFilters.categoryId !== 'all') items = items.filter(t => t.categoryId === _txFilters.categoryId);
+  if (_txFilters.accountId !== 'all')  items = items.filter(t => t.accountId === _txFilters.accountId);
+  if (_txFilters.startDate)            items = items.filter(t => new Date(t.date) >= new Date(_txFilters.startDate));
+  if (_txFilters.endDate)              items = items.filter(t => new Date(t.date) <= new Date(_txFilters.endDate + 'T23:59:59'));
+  if (_txFilters.search) {
+    const q = _txFilters.search.toLowerCase();
+    items = items.filter(t =>
+      t.description.toLowerCase().includes(q) ||
+      (t.notes || '').toLowerCase().includes(q),
+    );
+  }
+  items.sort((a, b) => new Date(b.date) - new Date(a.date));
+
+  const totals = items.reduce((acc, t) => {
+    if (t.type === 'INCOME') acc.income += t.amount;
+    else acc.expense += t.amount;
+    return acc;
+  }, { income: 0, expense: 0 });
+  totals.balance = totals.income - totals.expense;
+
+  const hasFilters = _txFilters.type !== 'all' || _txFilters.categoryId !== 'all' || _txFilters.accountId !== 'all' || _txFilters.startDate || _txFilters.endDate || _txFilters.search;
+
+  root.innerHTML = `
+    <div class="space-y-6">
+      <div class="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
+        <div>
+          <h1 class="text-2xl font-bold tracking-tight">Transações</h1>
+          <p class="text-sm text-muted">${items.length} transação(ões) encontradas</p>
+        </div>
+        <div class="flex flex-wrap gap-2">
+          <button id="tx-export-csv" class="btn btn-outline">⬇ CSV</button>
+          <button id="tx-export-xlsx" class="btn btn-outline">⬇ XLSX</button>
+          <button id="tx-add" class="btn btn-primary">+ Nova</button>
+        </div>
+      </div>
+
+      <!-- Filtros -->
+      <div class="card p-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-6">
+        <div class="lg:col-span-2">
+          <label class="text-xs text-muted">Buscar</label>
+          <input id="f-search" class="field" placeholder="descrição ou notas…" value="${escapeHtml(_txFilters.search)}" />
+        </div>
+        <div>
+          <label class="text-xs text-muted">Tipo</label>
+          <select id="f-type" class="field">
+            <option value="all" ${_txFilters.type === 'all' ? 'selected' : ''}>Todos</option>
+            <option value="EXPENSE" ${_txFilters.type === 'EXPENSE' ? 'selected' : ''}>Gastos</option>
+            <option value="INCOME" ${_txFilters.type === 'INCOME' ? 'selected' : ''}>Receitas</option>
+          </select>
+        </div>
+        <div>
+          <label class="text-xs text-muted">Categoria</label>
+          <select id="f-category" class="field">
+            <option value="all">Todas</option>
+            ${data.categories.map(c => `<option value="${c.id}" ${_txFilters.categoryId === c.id ? 'selected' : ''}>${escapeHtml(c.name)}</option>`).join('')}
+          </select>
+        </div>
+        <div>
+          <label class="text-xs text-muted">Conta</label>
+          <select id="f-account" class="field">
+            <option value="all">Todas</option>
+            ${data.accounts.map(a => `<option value="${a.id}" ${_txFilters.accountId === a.id ? 'selected' : ''}>${escapeHtml(a.name)}</option>`).join('')}
+          </select>
+        </div>
+        <div class="grid grid-cols-2 gap-2">
+          <div>
+            <label class="text-xs text-muted">De</label>
+            <input id="f-start" type="date" class="field" value="${_txFilters.startDate}" />
+          </div>
+          <div>
+            <label class="text-xs text-muted">Até</label>
+            <input id="f-end" type="date" class="field" value="${_txFilters.endDate}" />
+          </div>
+        </div>
+        ${hasFilters ? `<button id="f-reset" class="btn btn-ghost text-sm lg:col-span-6 lg:justify-self-start">✕ Limpar filtros</button>` : ''}
+      </div>
+
+      <!-- Totais filtrados -->
+      <div class="grid grid-cols-3 gap-3">
+        ${summaryMini('Receitas', totals.income, 'success')}
+        ${summaryMini('Gastos', totals.expense, 'danger')}
+        ${summaryMini('Saldo', totals.balance, totals.balance >= 0 ? 'success' : 'danger')}
+      </div>
+
+      <!-- Tabela -->
+      <div class="card overflow-hidden">
+        ${items.length === 0 ? `
+          <div class="flex flex-col items-center gap-2 py-12 text-center">
+            <p class="text-sm text-muted">Nenhuma transação encontrada</p>
+            ${hasFilters ? `<button id="empty-reset" class="btn btn-ghost text-sm">Limpar filtros</button>` : ''}
+          </div>
+        ` : `
+          <div class="overflow-x-auto">
+            <table class="table">
+              <thead>
+                <tr>
+                  <th>Data</th>
+                  <th>Descrição</th>
+                  <th>Categoria</th>
+                  <th>Conta</th>
+                  <th class="hidden lg:table-cell">Tags</th>
+                  <th class="text-right">Valor</th>
+                </tr>
+              </thead>
+              <tbody>
+                ${items.map(tx => transactionRow(tx)).join('')}
+              </tbody>
+            </table>
+          </div>
+        `}
+      </div>
+    </div>
+  `;
+
+  // Bindings
+  document.getElementById('tx-add').onclick = () => openTransactionDialog();
+  document.getElementById('tx-export-csv').onclick = () => ImportExport.exportCSV(items, 'transacoes.csv');
+  document.getElementById('tx-export-xlsx').onclick = () => ImportExport.exportXLSX(items, 'transacoes.xlsx');
+
+  // Filtros — debounce na busca
+  document.getElementById('f-search').oninput = (e) => {
+    clearTimeout(_txSearchTimer);
+    const v = e.target.value;
+    _txSearchTimer = setTimeout(() => {
+      _txFilters.search = v;
+      renderTransactions();
+    }, 250);
+  };
+  document.getElementById('f-type').onchange = (e) => { _txFilters.type = e.target.value; renderTransactions(); };
+  document.getElementById('f-category').onchange = (e) => { _txFilters.categoryId = e.target.value; renderTransactions(); };
+  document.getElementById('f-account').onchange = (e) => { _txFilters.accountId = e.target.value; renderTransactions(); };
+  document.getElementById('f-start').onchange = (e) => { _txFilters.startDate = e.target.value; renderTransactions(); };
+  document.getElementById('f-end').onchange = (e) => { _txFilters.endDate = e.target.value; renderTransactions(); };
+
+  const reset = () => {
+    _txFilters = { search: '', type: 'all', categoryId: 'all', accountId: 'all', startDate: '', endDate: '' };
+    renderTransactions();
+  };
+  document.getElementById('f-reset')?.addEventListener('click', reset);
+  document.getElementById('empty-reset')?.addEventListener('click', reset);
+
+  // Click em transação
+  root.querySelectorAll('[data-tx-id]').forEach(el => {
+    el.onclick = () => openTransactionDialog(el.dataset.txId);
+  });
+}
+
+function summaryMini(label, value, tone) {
+  const color = tone === 'success' ? 'var(--success)' : 'var(--danger)';
+  return `
+    <div class="card p-4">
+      <p class="text-xs uppercase text-muted">${escapeHtml(label)}</p>
+      <p class="mt-1 text-lg font-bold tabular" style="color:${color};">${formatCurrency(value)}</p>
+    </div>
+  `;
+}
+
+function transactionRow(tx) {
+  const data = State.get();
+  const cat = data.categories.find(c => c.id === tx.categoryId);
+  const acc = data.accounts.find(a => a.id === tx.accountId);
+  const tagBadges = (tx.tagIds || []).map(tid => {
+    const t = data.tags.find(x => x.id === tid);
+    if (!t) return '';
+    return `<span class="badge" style="border-color:${t.color}; color:${t.color};">#${escapeHtml(t.name)}</span>`;
+  }).join(' ');
+  const sign = tx.type === 'INCOME' ? '+' : '−';
+  const color = tx.type === 'INCOME' ? 'var(--success)' : 'var(--danger)';
+  return `
+    <tr class="clickable" data-tx-id="${tx.id}">
+      <td class="tabular text-muted whitespace-nowrap">${formatDate(tx.date)}</td>
+      <td>
+        <div class="font-medium">${escapeHtml(tx.description)}</div>
+        ${tx.notes ? `<div class="text-xs text-muted">${escapeHtml(tx.notes)}</div>` : ''}
+      </td>
+      <td>
+        <span class="inline-flex items-center gap-2">
+          <span class="h-2 w-2 rounded-full" style="background:${cat?.color};"></span>
+          ${escapeHtml(cat?.name ?? '—')}
+        </span>
+      </td>
+      <td class="text-muted">${escapeHtml(acc?.name ?? '—')}</td>
+      <td class="hidden lg:table-cell"><div class="flex flex-wrap gap-1">${tagBadges}</div></td>
+      <td class="text-right font-semibold tabular" style="color:${color};">${sign} ${formatCurrency(tx.amount)}</td>
+    </tr>
+  `;
+}
+
+/* ---------- CATEGORIES ---------- */
+function renderCategories() {
+  const root = document.getElementById('page-root');
+  const data = State.get();
+  const expense = data.categories.filter(c => c.type === 'EXPENSE');
+  const income  = data.categories.filter(c => c.type === 'INCOME');
+
+  root.innerHTML = `
+    <div class="space-y-6">
+      <div class="flex items-end justify-between">
+        <div>
+          <h1 class="text-2xl font-bold tracking-tight">Categorias</h1>
+          <p class="text-sm text-muted">Organize seus gastos e receitas em categorias personalizadas</p>
+        </div>
+        <button id="cat-add" class="btn btn-primary">+ Nova categoria</button>
+      </div>
+      <div class="grid gap-6 md:grid-cols-2">
+        ${categoryGroup('Gastos', 'danger', expense)}
+        ${categoryGroup('Receitas', 'success', income)}
+      </div>
+    </div>
+  `;
+
+  document.getElementById('cat-add').onclick = () => openCategoryDialog();
+  root.querySelectorAll('[data-edit-cat]').forEach(b => {
+    b.onclick = (e) => { e.stopPropagation(); openCategoryDialog(b.dataset.editCat); };
+  });
+  root.querySelectorAll('[data-del-cat]').forEach(b => {
+    b.onclick = (e) => {
+      e.stopPropagation();
+      const cat = data.categories.find(c => c.id === b.dataset.delCat);
+      if (!confirm(`Excluir a categoria "${cat.name}"?`)) return;
+      try {
+        State.actions.deleteCategory(b.dataset.delCat);
+        Toast.success('Categoria excluída');
+      } catch (err) {
+        Toast.error('Não foi possível excluir', err.message);
+      }
+    };
+  });
+}
+
+function categoryGroup(title, tone, categories) {
+  const color = tone === 'success' ? 'var(--success)' : 'var(--danger)';
+  return `
+    <div class="card p-6">
+      <h3 class="font-semibold mb-4" style="color:${color};">${escapeHtml(title)}</h3>
+      ${categories.length === 0 ? `
+        <p class="py-6 text-center text-sm text-muted">Nenhuma categoria</p>
+      ` : `
+        <ul class="space-y-1">
+          ${categories.map(c => `
+            <li class="group flex items-center gap-3 rounded-md px-2 py-2 hover:bg-accent/40">
+              <span class="text-lg">${c.icon || '🏷️'}</span>
+              <span class="h-3 w-3 shrink-0 rounded-full" style="background:${c.color};"></span>
+              <span class="flex-1 text-sm font-medium">${escapeHtml(c.name)}</span>
+              <button data-edit-cat="${c.id}" class="btn btn-ghost btn-icon" aria-label="Editar">✎</button>
+              <button data-del-cat="${c.id}" class="btn btn-danger btn-icon" aria-label="Excluir">🗑</button>
+            </li>
+          `).join('')}
+        </ul>
+      `}
+    </div>
+  `;
+}
+
+/* ---------- ACCOUNTS ---------- */
+function renderAccounts() {
+  const root = document.getElementById('page-root');
+  const data = State.get();
+  const counts = new Map();
+  for (const t of data.transactions) {
+    counts.set(t.accountId, (counts.get(t.accountId) || 0) + 1);
+  }
+
+  root.innerHTML = `
+    <div class="space-y-6">
+      <div class="flex items-end justify-between">
+        <div>
+          <h1 class="text-2xl font-bold tracking-tight">Contas</h1>
+          <p class="text-sm text-muted">Separe finanças por contexto — pessoal, empresa, conjunta…</p>
+        </div>
+        <button id="acc-add" class="btn btn-primary">+ Nova conta</button>
+      </div>
+      <div class="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+        ${data.accounts.map(acc => `
+          <div class="card overflow-hidden">
+            <div style="height:6px; background:${acc.color};"></div>
+            <div class="p-4">
+              <div class="flex items-start justify-between gap-2">
+                <div class="flex h-10 w-10 items-center justify-center rounded-md text-lg"
+                     style="background:${acc.color}20; color:${acc.color};">👛</div>
+                <div class="flex gap-1">
+                  <button data-edit-acc="${acc.id}" class="btn btn-ghost btn-icon" aria-label="Editar">✎</button>
+                  <button data-del-acc="${acc.id}" class="btn btn-danger btn-icon" aria-label="Excluir">🗑</button>
+                </div>
+              </div>
+              <div class="mt-3 flex items-center gap-2 flex-wrap">
+                <h3 class="font-semibold">${escapeHtml(acc.name)}</h3>
+                ${acc.isDefault ? `<span class="badge ripple">⭐ Padrão</span>` : ''}
+              </div>
+              ${acc.description ? `<p class="mt-1 line-clamp-2 text-sm text-muted">${escapeHtml(acc.description)}</p>` : ''}
+              <p class="mt-3 text-xs text-muted">${counts.get(acc.id) || 0} transação(ões)</p>
+            </div>
+          </div>
+        `).join('')}
+      </div>
+    </div>
+  `;
+
+  document.getElementById('acc-add').onclick = () => openAccountDialog();
+  root.querySelectorAll('[data-edit-acc]').forEach(b => {
+    b.onclick = () => openAccountDialog(b.dataset.editAcc);
+  });
+  root.querySelectorAll('[data-del-acc]').forEach(b => {
+    b.onclick = () => {
+      const acc = data.accounts.find(a => a.id === b.dataset.delAcc);
+      const txCount = counts.get(acc.id) || 0;
+      const msg = txCount > 0
+        ? `Esta conta tem ${txCount} transação(ões) que serão EXCLUÍDAS. Continuar?`
+        : `Excluir a conta "${acc.name}"?`;
+      if (!confirm(msg)) return;
+      try {
+        State.actions.deleteAccount(b.dataset.delAcc);
+        Toast.success('Conta excluída');
+      } catch (err) {
+        Toast.error('Não foi possível excluir', err.message);
+      }
+    };
+  });
+}
+
+/* ---------- REPORTS ---------- */
+let _reportYearMonth = (() => {
+  const d = new Date();
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
+})();
+let _reportAccount = 'all';
+
+function renderReports() {
+  const root = document.getElementById('page-root');
+  const data = State.get();
+  const [y, m] = _reportYearMonth.split('-').map(Number);
+  const start = new Date(y, m - 1, 1);
+  const end = new Date(y, m, 0, 23, 59, 59, 999);
+
+  let txs = _reportAccount === 'all' ? data.transactions : data.transactions.filter(t => t.accountId === _reportAccount);
+  const monthTxs = Analytics.inRange(txs, start, end);
+  const summary = Analytics.summary(monthTxs);
+  const expenses = Analytics.byCategory(monthTxs, 'EXPENSE');
+  const incomes = Analytics.byCategory(monthTxs, 'INCOME');
+  const series = Analytics.timeSeries(monthTxs);
+  const averages = Analytics.monthlyAverages(txs, 6);
+
+  root.innerHTML = `
+    <div class="space-y-6">
+      <div>
+        <h1 class="text-2xl font-bold tracking-tight">Relatórios</h1>
+        <p class="text-sm text-muted">Análises detalhadas por mês e conta</p>
+      </div>
+
+      <!-- Filtros -->
+      <div class="card p-4 grid gap-3 sm:grid-cols-2">
+        <div>
+          <label class="text-xs text-muted">Mês</label>
+          <input id="r-month" type="month" class="field" value="${_reportYearMonth}" />
+        </div>
+        <div>
+          <label class="text-xs text-muted">Conta</label>
+          <select id="r-account" class="field">
+            <option value="all">Todas</option>
+            ${data.accounts.map(a => `<option value="${a.id}" ${_reportAccount === a.id ? 'selected' : ''}>${escapeHtml(a.name)}</option>`).join('')}
+          </select>
+        </div>
+      </div>
+
+      <!-- Resumo do mês -->
+      <div class="grid gap-3 sm:grid-cols-3">
+        ${summaryMini('Receitas', summary.totalIncome, 'success')}
+        ${summaryMini('Gastos', summary.totalExpense, 'danger')}
+        ${summaryMini('Saldo', summary.balance, summary.balance >= 0 ? 'success' : 'danger')}
+      </div>
+
+      <!-- Médias -->
+      <div class="card p-6">
+        <h3 class="font-semibold">Médias mensais (últimos 6 meses)</h3>
+        <p class="text-sm text-muted mb-4">Calculadas sobre ${averages.monthsConsidered} mês(es) com transações</p>
+        <div class="grid gap-3 sm:grid-cols-3">
+          <div>
+            <p class="text-xs uppercase text-muted">Média de receitas</p>
+            <p class="mt-1 text-lg font-bold tabular" style="color:var(--success);">${formatCurrency(averages.avgIncome)}</p>
+          </div>
+          <div>
+            <p class="text-xs uppercase text-muted">Média de gastos</p>
+            <p class="mt-1 text-lg font-bold tabular" style="color:var(--danger);">${formatCurrency(averages.avgExpense)}</p>
+          </div>
+          <div>
+            <p class="text-xs uppercase text-muted">Saldo médio</p>
+            <p class="mt-1 text-lg font-bold tabular" style="color:${averages.avgBalance >= 0 ? 'var(--success)' : 'var(--danger)'};">${formatCurrency(averages.avgBalance)}</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Evolução temporal -->
+      <div class="card p-6">
+        <h3 class="font-semibold mb-1">Evolução do mês</h3>
+        <p class="text-sm text-muted mb-4">Movimentações dia-a-dia</p>
+        <div style="position:relative; height:300px;"><canvas id="r-line"></canvas></div>
+      </div>
+
+      <!-- Pizza por categoria -->
+      <div class="grid gap-6 md:grid-cols-2">
+        <div class="card p-6">
+          <h3 class="font-semibold mb-4">Gastos por categoria</h3>
+          <div style="position:relative; height:280px;"><canvas id="r-pie-exp"></canvas></div>
+          ${categoryListPreview(expenses)}
+        </div>
+        <div class="card p-6">
+          <h3 class="font-semibold mb-4">Receitas por categoria</h3>
+          <div style="position:relative; height:280px;"><canvas id="r-pie-inc"></canvas></div>
+          ${categoryListPreview(incomes)}
+        </div>
+      </div>
+
+      <!-- Tags -->
+      ${data.tags.length > 0 ? `
+        <div class="card p-6">
+          <h3 class="font-semibold">Tags cadastradas</h3>
+          <p class="text-sm text-muted mb-4">Use tags em transações para análises cruzadas</p>
+          <div class="flex flex-wrap gap-2">
+            ${data.tags.map(t => `<span class="badge" style="border-color:${t.color}; color:${t.color};">#${escapeHtml(t.name)}</span>`).join(' ')}
+          </div>
+        </div>
+      ` : ''}
+    </div>
+  `;
+
+  document.getElementById('r-month').onchange = (e) => { _reportYearMonth = e.target.value; renderReports(); };
+  document.getElementById('r-account').onchange = (e) => { _reportAccount = e.target.value; renderReports(); };
+
+  Charts.line('r-line', series);
+  Charts.pie('r-pie-exp', expenses);
+  Charts.pie('r-pie-inc', incomes);
+}
+
+function categoryListPreview(items) {
+  if (items.length === 0) return '';
+  return `
+    <ul class="mt-4 space-y-2">
+      ${items.slice(0, 5).map(i => `
+        <li class="flex items-center gap-3 text-sm">
+          <span class="h-2.5 w-2.5 shrink-0 rounded-full" style="background:${i.color};"></span>
+          <span class="flex-1 truncate">${escapeHtml(i.categoryName)}</span>
+          <span class="text-xs text-muted">${i.percentage.toFixed(1)}%</span>
+          <span class="w-24 text-right tabular">${formatCurrency(i.total)}</span>
+        </li>
+      `).join('')}
+    </ul>
+  `;
+}
+
+/* ---------- SETTINGS / IMPORT / EXPORT ---------- */
+let _lastImportResult = null;
+
+function renderSettings() {
+  const root = document.getElementById('page-root');
+  const data = State.get();
+  const counts = new Map();
+  for (const t of data.transactions) {
+    for (const tagId of (t.tagIds || [])) {
+      counts.set(tagId, (counts.get(tagId) || 0) + 1);
+    }
+  }
+
+  root.innerHTML = `
+    <div class="space-y-6">
+      <div>
+        <h1 class="text-2xl font-bold tracking-tight">Importar / Exportar</h1>
+        <p class="text-sm text-muted">Mova seus dados para dentro e para fora do FinApp</p>
+      </div>
+
+      <div class="grid gap-6 md:grid-cols-2">
+        <!-- Import -->
+        <div class="card p-6">
+          <h3 class="font-semibold">Importar planilha</h3>
+          <p class="text-sm text-muted mb-4">
+            Aceita CSV e XLSX. Cabeçalhos suportados (PT/EN): valor/amount, descrição/description,
+            data/date, tipo/type, categoria/category, conta/account, tags, notas/notes.
+          </p>
+          <input id="import-file" type="file" accept=".csv,.xlsx,.xls" class="hidden" />
+          <button id="import-btn" class="btn btn-primary w-full">📤 Selecionar arquivo</button>
+          ${_lastImportResult ? `
+            <div class="rounded-md border border-border p-3 text-sm mt-4">
+              <p class="font-medium mb-2">Resultado da última importação</p>
+              <div class="grid grid-cols-2 gap-2 text-xs">
+                <div><span class="font-semibold" style="color:var(--success);">${_lastImportResult.imported}</span> importadas</div>
+                <div><span class="font-semibold text-muted">${_lastImportResult.skipped}</span> ignoradas</div>
+              </div>
+              ${_lastImportResult.errors.length > 0 ? `
+                <details class="mt-3">
+                  <summary class="cursor-pointer text-xs" style="color:var(--danger);">⚠ ${_lastImportResult.errors.length} erro(s) — ver detalhes</summary>
+                  <ul class="mt-2 max-h-40 space-y-1 overflow-y-auto text-xs">
+                    ${_lastImportResult.errors.map(e => `<li class="text-muted">Linha ${e.row}: ${escapeHtml(e.message)}</li>`).join('')}
+                  </ul>
+                </details>
+              ` : ''}
+            </div>
+          ` : ''}
+        </div>
+
+        <!-- Export -->
+        <div class="card p-6">
+          <h3 class="font-semibold">Exportar dados</h3>
+          <p class="text-sm text-muted mb-4">Baixa todas as suas transações em um arquivo</p>
+          <div class="space-y-2">
+            <button id="exp-csv" class="btn btn-outline w-full">⬇ Baixar CSV</button>
+            <button id="exp-xlsx" class="btn btn-outline w-full">⬇ Baixar XLSX</button>
+            <button id="exp-json" class="btn btn-outline w-full">💾 Backup completo (JSON)</button>
+          </div>
+          <p class="text-xs text-muted mt-3">Para exportações filtradas, use a página de Transações.</p>
+        </div>
+      </div>
+
+      <!-- Tags -->
+      <div class="card p-6">
+        <div class="flex items-center justify-between mb-4">
+          <div>
+            <h3 class="font-semibold">Tags</h3>
+            <p class="text-sm text-muted">Etiquetas para organização cruzada</p>
+          </div>
+          <button id="tag-add" class="btn btn-primary">+ Nova tag</button>
+        </div>
+        ${data.tags.length === 0 ? `
+          <p class="py-6 text-center text-sm text-muted">Nenhuma tag cadastrada</p>
+        ` : `
+          <ul class="grid gap-2 sm:grid-cols-2">
+            ${data.tags.map(t => `
+              <li class="group flex items-center gap-2 rounded-md border border-border px-3 py-2">
+                <span class="badge" style="border-color:${t.color}; color:${t.color};">#${escapeHtml(t.name)}</span>
+                <span class="ml-auto text-xs text-muted">${counts.get(t.id) || 0} uso(s)</span>
+                <button data-del-tag="${t.id}" class="btn btn-danger btn-icon" aria-label="Excluir">🗑</button>
+              </li>
+            `).join('')}
+          </ul>
+        `}
+      </div>
+
+      <!-- Zona de perigo -->
+      <div class="card p-6 border-2" style="border-color: color-mix(in srgb, var(--danger) 30%, var(--border));">
+        <h3 class="font-semibold mb-1" style="color:var(--danger);">Zona de perigo</h3>
+        <p class="text-sm text-muted mb-4">Apaga todas as transações, contas, categorias e tags</p>
+        <button id="reset-all" class="btn btn-danger" style="border:1px solid currentColor;">🗑 Resetar tudo</button>
+      </div>
+    </div>
+  `;
+
+  // Bindings
+  document.getElementById('import-btn').onclick = () => document.getElementById('import-file').click();
+  document.getElementById('import-file').onchange = async (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    try {
+      const result = await ImportExport.importFromFile(file);
+      _lastImportResult = result;
+      Toast.success('Importação concluída', `${result.imported} importadas, ${result.skipped} ignoradas`);
+      renderSettings();
+    } catch (err) {
+      Toast.error('Falha na importação', err.message);
+    }
+    e.target.value = '';
+  };
+
+  document.getElementById('exp-csv').onclick  = () => ImportExport.exportCSV(State.get().transactions);
+  document.getElementById('exp-xlsx').onclick = () => ImportExport.exportXLSX(State.get().transactions);
+  document.getElementById('exp-json').onclick = () => ImportExport.exportBackupJSON();
+
+  document.getElementById('tag-add').onclick = () => openTagDialog();
+  root.querySelectorAll('[data-del-tag]').forEach(b => {
+    b.onclick = () => {
+      const tag = data.tags.find(t => t.id === b.dataset.delTag);
+      const used = counts.get(tag.id) || 0;
+      const msg = used > 0
+        ? `Esta tag está em ${used} transação(ões). Excluir mesmo assim?`
+        : `Excluir a tag "${tag.name}"?`;
+      if (!confirm(msg)) return;
+      State.actions.deleteTag(b.dataset.delTag);
+      Toast.success('Tag excluída');
+    };
+  });
+
+  document.getElementById('reset-all').onclick = () => {
+    if (!confirm('TODOS os dados serão apagados. Esta ação não pode ser desfeita. Continuar?')) return;
+    if (!confirm('Tem certeza absoluta?')) return;
+    State.actions.resetAll();
+    Toast.success('Tudo apagado', 'Dados redefinidos para o estado inicial');
+    location.hash = '#/dashboard';
+  };
+}
+
+/* ===========================================================
+   11) FORMS — Diálogos de criação / edição.
+   ============================================================ */
+
+const PRESET_COLORS = ['#ef4444', '#f97316', '#eab308', '#22c55e', '#06b6d4', '#3b82f6', '#8b5cf6', '#a855f7', '#ec4899', '#6b7280'];
+const PRESET_ICONS = ['🍽️', '🚗', '🏠', '❤️', '🎮', '🎓', '🛍️', '🔁', '💼', '💻', '📈', '🎁', '📦', '👛', '☕', '✈️', '⛽', '🏥', '🎬', '📱'];
+
+/* ---- Transaction Dialog ---- */
+function openTransactionDialog(txId = null) {
+  const data = State.get();
+  const editing = txId ? data.transactions.find(t => t.id === txId) : null;
+
+  // Estado local do formulário
+  const form = editing ? {
+    type: editing.type,
+    amount: editing.amount,
+    date: typeof editing.date === 'string' ? editing.date.slice(0, 10) : new Date(editing.date).toISOString().slice(0, 10),
+    description: editing.description,
+    categoryId: editing.categoryId,
+    accountId: editing.accountId,
+    tagIds: [...(editing.tagIds || [])],
+    notes: editing.notes || '',
+  } : {
+    type: 'EXPENSE',
+    amount: '',
+    date: new Date().toISOString().slice(0, 10),
+    description: '',
+    categoryId: '',
+    accountId: (data.accounts.find(a => a.isDefault) ?? data.accounts[0])?.id ?? '',
+    tagIds: [],
+    notes: '',
+  };
+
+  function render() {
+    const filteredCats = data.categories.filter(c => c.type === form.type);
+    return `
+      <h2 class="text-lg font-semibold mb-1">${editing ? 'Editar transação' : 'Nova transação'}</h2>
+      <p class="text-sm text-muted mb-4">Preencha os campos abaixo. Categorias mudam conforme o tipo.</p>
+
+      <form id="tx-form" class="space-y-4">
+        <!-- Tipo -->
+        <div>
+          <label class="text-sm font-medium block mb-2">Tipo</label>
+          <div class="grid grid-cols-2 gap-2">
+            <button type="button" data-set-type="EXPENSE" class="btn ${form.type === 'EXPENSE' ? 'btn-danger' : 'btn-outline'}" style="${form.type === 'EXPENSE' ? 'border:1px solid var(--danger); background: color-mix(in srgb, var(--danger) 15%, transparent);' : ''}">Gasto</button>
+            <button type="button" data-set-type="INCOME" class="btn ${form.type === 'INCOME' ? '' : 'btn-outline'}" style="${form.type === 'INCOME' ? 'color: var(--success); border:1px solid var(--success); background: color-mix(in srgb, var(--success) 15%, transparent);' : ''}">Receita</button>
+          </div>
+        </div>
+
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label class="text-sm font-medium">Valor</label>
+            <input name="amount" type="number" step="0.01" min="0" class="field" value="${form.amount}" required />
+          </div>
+          <div>
+            <label class="text-sm font-medium">Data</label>
+            <input name="date" type="date" class="field" value="${form.date}" required />
+          </div>
+        </div>
+
+        <div>
+          <label class="text-sm font-medium">Descrição</label>
+          <input name="description" class="field" value="${escapeHtml(form.description)}" required />
+        </div>
+
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label class="text-sm font-medium">Categoria</label>
+            <select name="categoryId" class="field" required>
+              <option value="">Selecione…</option>
+              ${filteredCats.map(c => `<option value="${c.id}" ${form.categoryId === c.id ? 'selected' : ''}>${c.icon} ${escapeHtml(c.name)}</option>`).join('')}
+            </select>
+          </div>
+          <div>
+            <label class="text-sm font-medium">Conta</label>
+            <select name="accountId" class="field" required>
+              ${data.accounts.map(a => `<option value="${a.id}" ${form.accountId === a.id ? 'selected' : ''}>${escapeHtml(a.name)}</option>`).join('')}
+            </select>
+          </div>
+        </div>
+
+        ${data.tags.length > 0 ? `
+          <div>
+            <label class="text-sm font-medium block mb-2">Tags</label>
+            <div class="flex flex-wrap gap-2">
+              ${data.tags.map(t => {
+                const active = form.tagIds.includes(t.id);
+                return `
+                  <button type="button" data-toggle-tag="${t.id}"
+                          class="badge"
+                          style="cursor:pointer; ${active ? `background:${t.color}; color:white; border-color:${t.color};` : ''}">
+                    #${escapeHtml(t.name)}
+                  </button>`;
+              }).join('')}
+            </div>
+          </div>
+        ` : ''}
+
+        <div>
+          <label class="text-sm font-medium">Notas (opcional)</label>
+          <textarea name="notes" class="field" rows="2">${escapeHtml(form.notes)}</textarea>
+        </div>
+
+        <div class="flex flex-col-reverse sm:flex-row sm:justify-end gap-2 pt-2">
+          ${editing ? `<button type="button" id="tx-delete" class="btn btn-danger sm:mr-auto">🗑 Excluir</button>` : ''}
+          <button type="button" id="tx-cancel" class="btn btn-outline">Cancelar</button>
+          <button type="submit" class="btn btn-primary">Salvar</button>
+        </div>
+      </form>
+    `;
+  }
+
+  function bind() {
+    const el = Modal.content();
+    el.querySelectorAll('[data-set-type]').forEach(b => {
+      b.onclick = () => { form.type = b.dataset.setType; form.categoryId = ''; rerender(); };
+    });
+    el.querySelectorAll('[data-toggle-tag]').forEach(b => {
+      b.onclick = () => {
+        const id = b.dataset.toggleTag;
+        form.tagIds = form.tagIds.includes(id) ? form.tagIds.filter(x => x !== id) : [...form.tagIds, id];
+        rerender();
+      };
+    });
+
+    el.querySelector('#tx-cancel').onclick = () => Modal.close();
+    el.querySelector('#tx-delete')?.addEventListener('click', () => {
+      if (!confirm('Tem certeza que deseja excluir esta transação?')) return;
+      State.actions.deleteTransaction(txId);
+      Toast.success('Transação excluída');
+      Modal.close();
+    });
+
+    el.querySelector('#tx-form').onsubmit = (e) => {
+      e.preventDefault();
+      const fd = new FormData(e.target);
+      const payload = {
+        type: form.type,
+        amount: Utils.toNumber(fd.get('amount')),
+        date: new Date(fd.get('date')).toISOString(),
+        description: String(fd.get('description')).trim(),
+        categoryId: String(fd.get('categoryId')),
+        accountId: String(fd.get('accountId')),
+        tagIds: form.tagIds,
+        notes: String(fd.get('notes')).trim(),
+      };
+      // validação leve
+      if (!payload.amount || payload.amount <= 0) { Toast.error('Valor inválido'); return; }
+      if (!payload.description) { Toast.error('Descrição obrigatória'); return; }
+      if (!payload.categoryId) { Toast.error('Selecione uma categoria'); return; }
+      if (!payload.accountId)  { Toast.error('Selecione uma conta'); return; }
+
+      try {
+        if (editing) {
+          State.actions.updateTransaction(txId, payload);
+          Toast.success('Transação atualizada');
+        } else {
+          State.actions.addTransaction(payload);
+          Toast.success('Transação criada');
+        }
+        Modal.close();
+      } catch (err) {
+        Toast.error('Erro ao salvar', err.message);
+      }
+    };
+  }
+
+  function rerender() {
+    // Atualiza form data antes de re-renderizar
+    const el = Modal.content();
+    const fd = new FormData(el.querySelector('#tx-form'));
+    form.amount = fd.get('amount') || form.amount;
+    form.date = fd.get('date') || form.date;
+    form.description = fd.get('description') || form.description;
+    form.categoryId = fd.get('categoryId') || form.categoryId;
+    form.accountId = fd.get('accountId') || form.accountId;
+    form.notes = fd.get('notes') || form.notes;
+
+    el.innerHTML = render();
+    bind();
+  }
+
+  Modal.open({ render, onCloseCallback: null });
+  bind();
+}
+
+/* ---- Category Dialog ---- */
+function openCategoryDialog(catId = null) {
+  const data = State.get();
+  const editing = catId ? data.categories.find(c => c.id === catId) : null;
+  const form = editing ? { ...editing } : { name: '', type: 'EXPENSE', color: '#6b7280', icon: '🏷️' };
+
+  function render() {
+    return `
+      <h2 class="text-lg font-semibold mb-4">${editing ? 'Editar categoria' : 'Nova categoria'}</h2>
+      <form id="cat-form" class="space-y-4">
+        <div>
+          <label class="text-sm font-medium">Nome</label>
+          <input name="name" class="field" value="${escapeHtml(form.name)}" required autofocus />
+        </div>
+        <div>
+          <label class="text-sm font-medium">Tipo</label>
+          <select name="type" class="field">
+            <option value="EXPENSE" ${form.type === 'EXPENSE' ? 'selected' : ''}>Gasto</option>
+            <option value="INCOME" ${form.type === 'INCOME' ? 'selected' : ''}>Receita</option>
+          </select>
+        </div>
+        <div>
+          <label class="text-sm font-medium block mb-2">Cor</label>
+          <div class="flex flex-wrap gap-2">
+            ${PRESET_COLORS.map(c => `
+              <button type="button" data-set-color="${c}"
+                      class="h-8 w-8 rounded-full transition-transform hover:scale-110"
+                      style="background:${c}; ${form.color === c ? `outline: 3px solid ${c}; outline-offset: 2px;` : ''}">
+              </button>
+            `).join('')}
+          </div>
+        </div>
+        <div>
+          <label class="text-sm font-medium block mb-2">Ícone</label>
+          <div class="flex flex-wrap gap-1">
+            ${PRESET_ICONS.map(i => `
+              <button type="button" data-set-icon="${i}"
+                      class="rounded-md border border-border px-2 py-1 text-base hover:bg-accent"
+                      style="${form.icon === i ? 'background: color-mix(in srgb, var(--primary) 15%, transparent); border-color: var(--primary);' : ''}">
+                ${i}
+              </button>
+            `).join('')}
+          </div>
+        </div>
+        <div class="flex justify-end gap-2 pt-2">
+          <button type="button" id="cat-cancel" class="btn btn-outline">Cancelar</button>
+          <button type="submit" class="btn btn-primary">Salvar</button>
+        </div>
+      </form>
+    `;
+  }
+
+  function bind() {
+    const el = Modal.content();
+    el.querySelectorAll('[data-set-color]').forEach(b => b.onclick = () => { form.color = b.dataset.setColor; rerender(); });
+    el.querySelectorAll('[data-set-icon]').forEach(b => b.onclick = () => { form.icon = b.dataset.setIcon; rerender(); });
+
+    el.querySelector('#cat-cancel').onclick = () => Modal.close();
+    el.querySelector('#cat-form').onsubmit = (e) => {
+      e.preventDefault();
+      const fd = new FormData(e.target);
+      const payload = {
+        name: String(fd.get('name')).trim(),
+        type: String(fd.get('type')),
+        color: form.color,
+        icon: form.icon,
+      };
+      if (!payload.name) { Toast.error('Nome obrigatório'); return; }
+      try {
+        if (editing) {
+          State.actions.updateCategory(catId, payload);
+          Toast.success('Categoria atualizada');
+        } else {
+          State.actions.addCategory(payload);
+          Toast.success('Categoria criada');
+        }
+        Modal.close();
+      } catch (err) {
+        Toast.error('Erro ao salvar', err.message);
+      }
+    };
+  }
+
+  function rerender() {
+    const el = Modal.content();
+    const fd = new FormData(el.querySelector('#cat-form'));
+    form.name = fd.get('name') || form.name;
+    form.type = fd.get('type') || form.type;
+    el.innerHTML = render();
+    bind();
+  }
+
+  Modal.open({ render, onCloseCallback: null });
+  bind();
+}
+
+/* ---- Account Dialog ---- */
+function openAccountDialog(accId = null) {
+  const data = State.get();
+  const editing = accId ? data.accounts.find(a => a.id === accId) : null;
+  const form = editing ? { ...editing } : { name: '', description: '', color: '#3b82f6', isDefault: false };
+
+  function render() {
+    return `
+      <h2 class="text-lg font-semibold mb-4">${editing ? 'Editar conta' : 'Nova conta'}</h2>
+      <form id="acc-form" class="space-y-4">
+        <div>
+          <label class="text-sm font-medium">Nome</label>
+          <input name="name" class="field" value="${escapeHtml(form.name)}" required autofocus />
+        </div>
+        <div>
+          <label class="text-sm font-medium">Descrição (opcional)</label>
+          <textarea name="description" class="field" rows="2">${escapeHtml(form.description || '')}</textarea>
+        </div>
+        <div>
+          <label class="text-sm font-medium block mb-2">Cor</label>
+          <div class="flex flex-wrap gap-2">
+            ${PRESET_COLORS.map(c => `
+              <button type="button" data-set-color="${c}"
+                      class="h-8 w-8 rounded-full transition-transform hover:scale-110"
+                      style="background:${c}; ${form.color === c ? `outline: 3px solid ${c}; outline-offset: 2px;` : ''}">
+              </button>
+            `).join('')}
+          </div>
+        </div>
+        <label class="flex items-center gap-2 text-sm cursor-pointer">
+          <input name="isDefault" type="checkbox" ${form.isDefault ? 'checked' : ''} class="h-4 w-4" />
+          Definir como conta padrão
+        </label>
+        <div class="flex justify-end gap-2 pt-2">
+          <button type="button" id="acc-cancel" class="btn btn-outline">Cancelar</button>
+          <button type="submit" class="btn btn-primary">Salvar</button>
+        </div>
+      </form>
+    `;
+  }
+
+  function bind() {
+    const el = Modal.content();
+    el.querySelectorAll('[data-set-color]').forEach(b => b.onclick = () => { form.color = b.dataset.setColor; rerender(); });
+
+    el.querySelector('#acc-cancel').onclick = () => Modal.close();
+    el.querySelector('#acc-form').onsubmit = (e) => {
+      e.preventDefault();
+      const fd = new FormData(e.target);
+      const payload = {
+        name: String(fd.get('name')).trim(),
+        description: String(fd.get('description')).trim(),
+        color: form.color,
+        isDefault: !!fd.get('isDefault'),
+      };
+      if (!payload.name) { Toast.error('Nome obrigatório'); return; }
+      try {
+        if (editing) {
+          State.actions.updateAccount(accId, payload);
+          Toast.success('Conta atualizada');
+        } else {
+          State.actions.addAccount(payload);
+          Toast.success('Conta criada');
+        }
+        Modal.close();
+      } catch (err) {
+        Toast.error('Erro ao salvar', err.message);
+      }
+    };
+  }
+
+  function rerender() {
+    const el = Modal.content();
+    const fd = new FormData(el.querySelector('#acc-form'));
+    form.name = fd.get('name') || form.name;
+    form.description = fd.get('description') || form.description;
+    form.isDefault = !!fd.get('isDefault');
+    el.innerHTML = render();
+    bind();
+  }
+
+  Modal.open({ render, onCloseCallback: null });
+  bind();
+}
+
+/* ---- Tag Dialog ---- */
+function openTagDialog() {
+  const form = { name: '', color: '#8b5cf6' };
+
+  function render() {
+    return `
+      <h2 class="text-lg font-semibold mb-4">Nova tag</h2>
+      <form id="tag-form" class="space-y-4">
+        <div>
+          <label class="text-sm font-medium">Nome</label>
+          <input name="name" class="field" placeholder="ex.: viagem-2025" value="${escapeHtml(form.name)}" required autofocus />
+        </div>
+        <div>
+          <label class="text-sm font-medium block mb-2">Cor</label>
+          <div class="flex flex-wrap gap-2">
+            ${PRESET_COLORS.map(c => `
+              <button type="button" data-set-color="${c}"
+                      class="h-8 w-8 rounded-full transition-transform hover:scale-110"
+                      style="background:${c}; ${form.color === c ? `outline: 3px solid ${c}; outline-offset: 2px;` : ''}">
+              </button>
+            `).join('')}
+          </div>
+        </div>
+        <div class="flex justify-end gap-2 pt-2">
+          <button type="button" id="tag-cancel" class="btn btn-outline">Cancelar</button>
+          <button type="submit" class="btn btn-primary">Criar</button>
+        </div>
+      </form>
+    `;
+  }
+
+  function bind() {
+    const el = Modal.content();
+    el.querySelectorAll('[data-set-color]').forEach(b => b.onclick = () => { form.color = b.dataset.setColor; rerender(); });
+
+    el.querySelector('#tag-cancel').onclick = () => Modal.close();
+    el.querySelector('#tag-form').onsubmit = (e) => {
+      e.preventDefault();
+      const fd = new FormData(e.target);
+      const name = String(fd.get('name')).trim().toLowerCase();
+      if (!name || !/^[\p{L}\p{N}_-]+$/u.test(name)) {
+        Toast.error('Nome inválido', 'Use apenas letras, números, _ ou -');
+        return;
+      }
+      try {
+        State.actions.addTag({ name, color: form.color });
+        Toast.success('Tag criada');
+        Modal.close();
+      } catch (err) {
+        Toast.error('Erro ao criar tag', err.message);
+      }
+    };
+  }
+
+  function rerender() {
+    const el = Modal.content();
+    const fd = new FormData(el.querySelector('#tag-form'));
+    form.name = fd.get('name') || form.name;
+    el.innerHTML = render();
+    bind();
+  }
+
+  Modal.open({ render, onCloseCallback: null });
+  bind();
+}
+
+/* ===========================================================
+   12) ROUTER & THEME
+   ============================================================ */
+function applyTheme() {
+  const { theme } = State.get().settings;
+  const dark = theme === 'dark' || (theme === 'system' && matchMedia('(prefers-color-scheme: dark)').matches);
+  document.documentElement.classList.toggle('dark', dark);
+}
+
+function toggleTheme() {
+  const cur = State.get().settings.theme;
+  const next = cur === 'dark' ? 'light' : 'dark';
+  State.actions.setTheme(next);
+}
+
+const ROUTES = {
+  '#/dashboard':    renderDashboard,
+  '#/transactions': renderTransactions,
+  '#/categories':   renderCategories,
+  '#/accounts':     renderAccounts,
+  '#/reports':      renderReports,
+  '#/settings':     renderSettings,
+};
+
+function navigate() {
+  const hash = location.hash || '#/dashboard';
+  const fn = ROUTES[hash] || ROUTES['#/dashboard'];
+  renderNav();
+  // Limpa charts antigos para evitar leak
+  Charts.destroy('chart-pie');
+  Charts.destroy('chart-line');
+  Charts.destroy('r-pie-exp');
+  Charts.destroy('r-pie-inc');
+  Charts.destroy('r-line');
+  fn();
+}
+
+/* ===========================================================
+   13) BOOT
+   ============================================================ */
+(function init() {
+  // Tema inicial
+  applyTheme();
+  matchMedia('(prefers-color-scheme: dark)').addEventListener('change', applyTheme);
+
+  // Navegação
+  window.addEventListener('hashchange', navigate);
+  if (!location.hash) location.hash = '#/dashboard';
+
+  // Re-render ao mudar estado
+  State.subscribe(() => {
+    // Reaplica tema (caso tenha mudado)
+    applyTheme();
+    // Re-renderiza tela atual
+    navigate();
+  });
+
+  // Botões globais
+  document.getElementById('btn-theme').onclick = toggleTheme;
+  document.getElementById('btn-theme-mobile').onclick = toggleTheme;
+
+  // Drawer mobile
+  const drawer = document.getElementById('mobile-drawer');
+  document.getElementById('btn-menu').onclick = () => drawer.classList.remove('hidden');
+  drawer.querySelectorAll('[data-close-drawer]').forEach(el => {
+    el.onclick = () => drawer.classList.add('hidden');
+  });
+  // Fecha drawer ao navegar
+  window.addEventListener('hashchange', () => drawer.classList.add('hidden'));
+
+  // Render inicial
+  navigate();
+})();
+</script>
+
+</body>
+</html>
