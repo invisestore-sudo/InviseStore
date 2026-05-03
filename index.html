@@ -958,12 +958,12 @@
   <div class="featured-card">
     <div>
       <div class="featured-label">⭐ Mais vendido do mês</div>
-      <div class="featured-title">App de Hábitos e Metas</div>
-      <p class="featured-desc">Rastreie seus hábitos diários, defina metas e veja seu progresso crescer de forma visual e motivadora. Sem anúncios, sem distrações.</p>
-      <div class="featured-price"><small>R$ 45</small>R$ 32</div>
-      <button class="btn-primary" onclick="addToCartDirect('App de Hábitos e Metas', 'R$ 32', 'Aplicativo para rastrear hábitos diários, definir metas e medir seu progresso de forma visual e motivadora.', ['App web responsivo', 'Modo offline', 'Relatórios semanais', 'Sem anúncios', 'PIX, Cartão ou Boleto'], 'app', 'R$ 45')">🛒 Adicionar ao carrinho</button>
+      <div class="featured-title">HabitPlan + Ebook Hábitos</div>
+      <p class="featured-desc">O combo perfeito: o método científico para criar hábitos duradouros <strong>mais</strong> o app para colocar tudo em prática. Rastreie, mantenha streaks e evolua todo dia.</p>
+      <div class="featured-price"><small>R$ 54</small>R$ 47</div>
+      <button class="btn-primary" onclick="addToCartDirect('HabitPlan + Ebook Hábitos', 'R$ 47', 'Combo completo: ebook Como Criar Hábitos que Grudam + WebApp HabitPlan.', ['Ebook Como Criar Hábitos que Grudam', 'WebApp HabitPlan completo', 'Streaks e lembretes', 'Rastreamento diário', 'Acesso vitalício a tudo'], 'app', 'R$ 54')">🛒 Adicionar ao carrinho</button>
     </div>
-    <div class="featured-visual">🎯<span class="featured-visual-label">App interativo</span></div>
+    <div class="featured-visual">🎁<span class="featured-visual-label">Pacote completo</span></div>
   </div>
 
   <!-- TABS -->
@@ -971,6 +971,7 @@
     <button class="tab active" onclick="filterCategory('todos', this)">Todos</button>
     <button class="tab" onclick="filterCategory('ebooks', this)">📚 Ebooks</button>
     <button class="tab" onclick="filterCategory('apps', this)">⚡ Aplicativos</button>
+    <button class="tab" onclick="filterCategory('pacotes', this)">🎁 Pacotes</button>
   </div>
 
   <!-- GRID -->
@@ -1042,6 +1043,7 @@
       </div>
     </div>
 
+    <!-- Ebook: Dono do Seu Dinheiro -->
     <div class="product-card" data-cat="ebooks" onclick="openModal('Dono do Seu Dinheiro', 'R$ 30', 'Aprenda a organizar suas finanças, sair das dívidas e começar a investir. Linguagem simples, resultados reais.', ['PDF + EPUB incluso', '130 páginas', 'Planilha bônus', 'Acesso vitalício', 'PIX, Cartão ou Boleto'], 'ebook', null)">
       <div class="product-thumb thumb-finance">
         <div class="product-badge badge-ebook">Ebook</div>
@@ -1054,6 +1056,125 @@
         <div class="product-footer">
           <div class="product-price">R$ 30</div>
           <button class="btn-buy" onclick="event.stopPropagation(); addToCartDirect('Dono do Seu Dinheiro','R$ 30','Aprenda a organizar suas finanças, sair das dívidas e começar a investir.',['PDF + EPUB incluso','130 páginas','Planilha bônus','Acesso vitalício'],'ebook',null)">+ Carrinho</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- WebApp: FinanPro -->
+    <div class="product-card" data-cat="apps" onclick="openModal('FinanPro', 'R$ 37', 'Aplicativo completo para controle financeiro pessoal. Gerencie receitas, despesas, metas e relatórios em um só lugar.', ['App web responsivo', 'Controle de receitas e despesas', 'Relatórios automáticos', 'Metas financeiras', 'Acesso vitalício'], 'app', null)">
+      <div class="product-thumb thumb-finance">
+        <div class="product-badge badge-app">WebApp</div>
+        📊
+      </div>
+      <div class="product-info">
+        <div class="product-name">FinanPro</div>
+        <div class="product-rating"><span class="stars">★★★★★</span><span class="rating-count">(61)</span></div>
+        <p class="product-desc">App completo de finanças pessoais. Receitas, despesas, metas e relatórios automáticos.</p>
+        <div class="product-footer">
+          <div class="product-price">R$ 37</div>
+          <button class="btn-buy" onclick="event.stopPropagation(); addToCartDirect('FinanPro','R$ 37','Aplicativo completo para controle financeiro pessoal.',['App web responsivo','Controle de receitas e despesas','Relatórios automáticos','Metas financeiras','Acesso vitalício'],'app',null)">+ Carrinho</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- WebApp: Monte Seu Treino -->
+    <div class="product-card" data-cat="apps" onclick="openModal('Monte Seu Treino', 'R$ 27', 'Monte treinos personalizados de forma simples, acompanhe sua evolução e nunca mais fique sem saber o que treinar.', ['App web responsivo', 'Criação de treinos personalizados', 'Histórico de evolução', 'Fichas prontas', 'Acesso vitalício'], 'app', null)">
+      <div class="product-thumb thumb-app">
+        <div class="product-badge badge-app">WebApp</div>
+        🏋️
+      </div>
+      <div class="product-info">
+        <div class="product-name">Monte Seu Treino</div>
+        <div class="product-rating"><span class="stars">★★★★★</span><span class="rating-count">(39)</span></div>
+        <p class="product-desc">Crie treinos personalizados, acompanhe sua evolução e nunca mais fique sem plano.</p>
+        <div class="product-footer">
+          <div class="product-price">R$ 27</div>
+          <button class="btn-buy" onclick="event.stopPropagation(); addToCartDirect('Monte Seu Treino','R$ 27','Monte treinos personalizados de forma simples e acompanhe sua evolução.',['App web responsivo','Criação de treinos personalizados','Histórico de evolução','Fichas prontas','Acesso vitalício'],'app',null)">+ Carrinho</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Ebook: Ciência da Longevidade -->
+    <div class="product-card" data-cat="ebooks" onclick="openModal('Ciência da Longevidade', 'R$ 27', 'Descubra os pilares científicos de uma vida longa e saudável: sono, nutrição, exercício e saúde mental.', ['PDF + EPUB incluso', 'Base científica atualizada', 'Guia prático de hábitos', 'Acesso vitalício'], 'ebook', null)">
+      <div class="product-thumb thumb-sheet">
+        <div class="product-badge badge-ebook">Ebook</div>
+        🧬
+      </div>
+      <div class="product-info">
+        <div class="product-name">Ciência da Longevidade</div>
+        <div class="product-rating"><span class="stars">★★★★★</span><span class="rating-count">(52)</span></div>
+        <p class="product-desc">Os pilares científicos de uma vida longa e saudável. Sono, nutrição, exercício e bem-estar.</p>
+        <div class="product-footer">
+          <div class="product-price">R$ 27</div>
+          <button class="btn-buy" onclick="event.stopPropagation(); addToCartDirect('Ciência da Longevidade','R$ 27','Descubra os pilares científicos de uma vida longa e saudável.',['PDF + EPUB incluso','Base científica atualizada','Guia prático de hábitos','Acesso vitalício'],'ebook',null)">+ Carrinho</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Ebook: Do Zero à Primeira Passagem -->
+    <div class="product-card" data-cat="ebooks" onclick="openModal('Do Zero à Primeira Passagem', 'R$ 27', 'O guia definitivo para quem nunca viajou de avião. Aprenda a comprar passagens baratas, usar milhas e planejar viagens.', ['PDF + EPUB incluso', 'Estratégias de milhas', 'Alertas de promoção', 'Planejamento de roteiro', 'Acesso vitalício'], 'ebook', null)">
+      <div class="product-thumb thumb-mkt">
+        <div class="product-badge badge-ebook">Ebook</div>
+        ✈️
+      </div>
+      <div class="product-info">
+        <div class="product-name">Do Zero à Primeira Passagem</div>
+        <div class="product-rating"><span class="stars">★★★★★</span><span class="rating-count">(78)</span></div>
+        <p class="product-desc">Aprenda a comprar passagens baratas, usar milhas e planejar sua primeira viagem de avião.</p>
+        <div class="product-footer">
+          <div class="product-price">R$ 27</div>
+          <button class="btn-buy" onclick="event.stopPropagation(); addToCartDirect('Do Zero à Primeira Passagem','R$ 27','O guia definitivo para comprar passagens baratas e planejar viagens.',['PDF + EPUB incluso','Estratégias de milhas','Alertas de promoção','Planejamento de roteiro','Acesso vitalício'],'ebook',null)">+ Carrinho</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Ebook: Como Criar Hábitos que Grudam -->
+    <div class="product-card" data-cat="ebooks" onclick="openModal('Como Criar Hábitos que Grudam', 'R$ 27', 'O método científico para criar hábitos duradouros e eliminar os que te travam. Psicologia aplicada ao dia a dia.', ['PDF + EPUB incluso', 'Método baseado em ciência', 'Templates de acompanhamento', 'Exemplos práticos', 'Acesso vitalício'], 'ebook', null)">
+      <div class="product-thumb thumb-ebook">
+        <div class="product-badge badge-ebook">Ebook</div>
+        🔗
+      </div>
+      <div class="product-info">
+        <div class="product-name">Como Criar Hábitos que Grudam</div>
+        <div class="product-rating"><span class="stars">★★★★★</span><span class="rating-count">(94)</span></div>
+        <p class="product-desc">Método científico para criar hábitos que duram e eliminar os que te sabotam.</p>
+        <div class="product-footer">
+          <div class="product-price">R$ 27</div>
+          <button class="btn-buy" onclick="event.stopPropagation(); addToCartDirect('Como Criar Hábitos que Grudam','R$ 27','O método científico para criar hábitos duradouros e eliminar os que te travam.',['PDF + EPUB incluso','Método baseado em ciência','Templates de acompanhamento','Exemplos práticos','Acesso vitalício'],'ebook',null)">+ Carrinho</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- WebApp: HabitPlan -->
+    <div class="product-card" data-cat="apps" onclick="openModal('HabitPlan', 'R$ 27', 'Aplicativo para planejar, rastrear e consolidar seus hábitos com lembretes, streaks e relatórios de progresso.', ['App web responsivo', 'Rastreamento de hábitos', 'Streaks e recompensas', 'Lembretes diários', 'Relatórios de progresso', 'Acesso vitalício'], 'app', null)">
+      <div class="product-thumb thumb-design">
+        <div class="product-badge badge-app">WebApp</div>
+        📅
+      </div>
+      <div class="product-info">
+        <div class="product-name">HabitPlan</div>
+        <div class="product-rating"><span class="stars">★★★★★</span><span class="rating-count">(47)</span></div>
+        <p class="product-desc">Planeje e rastreie seus hábitos com streaks, lembretes e relatórios de progresso.</p>
+        <div class="product-footer">
+          <div class="product-price">R$ 27</div>
+          <button class="btn-buy" onclick="event.stopPropagation(); addToCartDirect('HabitPlan','R$ 27','Aplicativo para planejar, rastrear e consolidar seus hábitos.',['App web responsivo','Rastreamento de hábitos','Streaks e recompensas','Lembretes diários','Relatórios de progresso','Acesso vitalício'],'app',null)">+ Carrinho</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Pacote: HabitPlan + Ebook Hábitos -->
+    <div class="product-card" data-cat="pacotes" onclick="openModal('HabitPlan + Ebook Hábitos', 'R$ 47', 'Combo completo: o método científico do ebook + o app para colocar tudo em prática. A combinação perfeita para transformar seus hábitos.', ['Ebook Como Criar Hábitos que Grudam', 'WebApp HabitPlan completo', 'Streaks e lembretes', 'Rastreamento diário', 'Acesso vitalício a tudo'], 'app', 'R$ 54')">
+      <div class="product-thumb" style="background: linear-gradient(135deg, #1a1040, #2a3a6c);">
+        <div class="product-badge" style="background:rgba(255,215,0,0.2);color:#ffd700;border:1px solid rgba(255,215,0,0.4);">Pacote</div>
+        🎁
+      </div>
+      <div class="product-info">
+        <div class="product-name">HabitPlan + Ebook Hábitos</div>
+        <div class="product-rating"><span class="stars">★★★★★</span><span class="rating-count">(29)</span></div>
+        <p class="product-desc">Combo completo: o ebook com o método + o app para colocar em prática. Melhor custo-benefício.</p>
+        <div class="product-footer">
+          <div class="product-price"><span>R$ 54</span>R$ 47</div>
+          <button class="btn-buy" onclick="event.stopPropagation(); addToCartDirect('HabitPlan + Ebook Hábitos','R$ 47','Combo completo: ebook Como Criar Hábitos que Grudam + WebApp HabitPlan.',['Ebook Como Criar Hábitos que Grudam','WebApp HabitPlan completo','Streaks e lembretes','Rastreamento diário','Acesso vitalício a tudo'],'app','R$ 54')">+ Carrinho</button>
         </div>
       </div>
     </div>
@@ -1380,11 +1501,14 @@
     <label style="display:block; font-size:13px; color:var(--muted); margin-bottom:8px;">Produto</label>
     <select id="reviewProduct" style="width:100%; background:var(--surface2); border:1px solid var(--border); border-radius:12px; padding:11px 16px; color:var(--text); font-family:'DM Sans',sans-serif; font-size:14px; outline:none; margin-bottom:20px;">
       <option value="">Selecione um produto...</option>
-      <option>Marketing Digital do Zero</option>
-      <option>O que você pode fazer com IA</option>
-      <option>App de Hábitos e Metas</option>
-      <option>App Controle de Gastos</option>
       <option>Dono do Seu Dinheiro</option>
+      <option>FinanPro</option>
+      <option>Monte Seu Treino</option>
+      <option>Ciência da Longevidade</option>
+      <option>Do Zero à Primeira Passagem</option>
+      <option>Como Criar Hábitos que Grudam</option>
+      <option>HabitPlan</option>
+      <option>HabitPlan + Ebook Hábitos</option>
     </select>
 
     <label style="display:block; font-size:13px; color:var(--muted); margin-bottom:10px;">Avaliação</label>
@@ -1416,25 +1540,37 @@
   //    após a compra (PDF do ebook, link do app, link da planilha, etc)
   // ============================================================
   const productConfig = {
-    'Marketing Digital do Zero': {
-      mercadoPago: 'https://mpago.li/SEU_LINK_MP_AQUI',
-      delivery:    'https://drive.google.com/file/d/SEU_LINK_DO_EBOOK_AQUI/view'
-    },
-    'O que você pode fazer com IA': {
-      mercadoPago: 'https://mpago.li/SEU_LINK_MP_AQUI',
-      delivery:    'https://drive.google.com/file/d/SEU_LINK_DO_EBOOK_AQUI/view'
-    },
-    'App de Hábitos e Metas': {
-      mercadoPago: 'https://mpago.li/SEU_LINK_MP_AQUI',
-      delivery:    'https://seu-app.vercel.app/acesso'
-    },
-    'App Controle de Gastos': {
-      mercadoPago: 'https://mpago.li/SEU_LINK_MP_AQUI',
-      delivery:    'https://seu-app.vercel.app/acesso'
-    },
     'Dono do Seu Dinheiro': {
       mercadoPago: 'https://mpago.li/2C43V3d',
       delivery:    'https://drive.google.com/file/d/SEU_LINK_DO_EBOOK_AQUI/view'
+    },
+    'FinanPro': {
+      mercadoPago: 'https://mpago.la/1EFFEt5',
+      delivery:    'https://seu-app.vercel.app/acesso'
+    },
+    'Monte Seu Treino': {
+      mercadoPago: 'https://mpago.la/114VeD7',
+      delivery:    'https://seu-app.vercel.app/acesso'
+    },
+    'Ciência da Longevidade': {
+      mercadoPago: 'https://mpago.la/1xXubjc',
+      delivery:    'https://drive.google.com/file/d/SEU_LINK_DO_EBOOK_AQUI/view'
+    },
+    'Do Zero à Primeira Passagem': {
+      mercadoPago: 'https://mpago.la/2RVQ7mg',
+      delivery:    'https://drive.google.com/file/d/SEU_LINK_DO_EBOOK_AQUI/view'
+    },
+    'Como Criar Hábitos que Grudam': {
+      mercadoPago: 'https://mpago.la/33p3VmE',
+      delivery:    'https://drive.google.com/file/d/SEU_LINK_DO_EBOOK_AQUI/view'
+    },
+    'HabitPlan': {
+      mercadoPago: 'https://mpago.la/1zj9kFN',
+      delivery:    'https://seu-app.vercel.app/acesso'
+    },
+    'HabitPlan + Ebook Hábitos': {
+      mercadoPago: 'https://mpago.la/17xDJvX',
+      delivery:    'https://seu-app.vercel.app/acesso'
     },
   };
 
@@ -1682,12 +1818,11 @@
 
   // ============================================================
   // ENVIA O PEDIDO PARA O BACKEND
-  // 
-  // Configure BACKEND_URL com a URL do seu servidor.
-  // Se estiver rodando o servidor local: 'http://localhost:3000'
-  // Se publicado: 'https://seu-backend.com'
+  //
+  // ⚠️ TROQUE A URL ABAIXO pela URL do seu backend Render.
+  // Ex: 'https://invisestore-backend.onrender.com'
   // ============================================================
-  const BACKEND_URL = 'http://localhost:3000';
+  const BACKEND_URL = window.INVISE_API || 'https://invisestore-backend.onrender.com';
 
   function enviarPedidoParaBackend(order) {
     // Tenta enviar para o backend, mas não bloqueia o fluxo se falhar
