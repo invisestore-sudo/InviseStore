@@ -1370,16 +1370,9 @@
         <input id="meet-email" type="email" placeholder="seu@email.com" style="width:100%; background:var(--surface2); border:1px solid var(--border); border-radius:12px; padding:12px 16px; color:var(--text); font-family:'DM Sans',sans-serif; font-size:14px; outline:none;">
       </div>
       <div>
-        <label style="font-size:12px; color:var(--muted); display:block; margin-bottom:6px; text-transform:uppercase; letter-spacing:0.5px;">✓ Qual é seu orçamento aproximado? *</label>
-        <select id="meet-budget" style="width:100%; background:var(--surface2); border:1px solid var(--border); border-radius:12px; padding:12px 16px; color:var(--text); font-family:'DM Sans',sans-serif; font-size:14px; outline:none;">
-          <option value="">Selecione uma faixa...</option>
-          <option value="Até R$ 1.000">Até R$ 1.000</option>
-          <option value="R$ 1.000 a R$ 3.000">R$ 1.000 a R$ 3.000</option>
-          <option value="R$ 3.000 a R$ 7.000">R$ 3.000 a R$ 7.000</option>
-          <option value="R$ 7.000 a R$ 15.000">R$ 7.000 a R$ 15.000</option>
-          <option value="Acima de R$ 15.000">Acima de R$ 15.000</option>
-          <option value="Ainda não sei">Ainda não sei</option>
-        </select>
+        <label style="font-size:12px; color:var(--muted); display:block; margin-bottom:8px; text-transform:uppercase; letter-spacing:0.5px;">✓ Escolha o nível do seu projeto *</label>
+        <div id="meet-tiers" style="display:flex; flex-direction:column; gap:10px;"></div>
+        <input type="hidden" id="meet-tier" value="">
       </div>
       <div>
         <label style="font-size:12px; color:var(--muted); display:block; margin-bottom:6px; text-transform:uppercase; letter-spacing:0.5px;">✓ Quando você precisa começar? *</label>
@@ -2015,10 +2008,94 @@ InviseStore — Guias & Apps`
   // ============================================================
   let meetingProduct = null;
 
+  const TIERS = {
+    'Crie seu Site': [
+      { name: 'Básico', tagline: 'Site de apresentação', features: [
+        'Apresentação de ideia, produto ou pessoa',
+        'Imagens e vídeos',
+        'Design moderno e responsivo',
+        'Otimizado para SEO',
+        'Site verificado como "Seguro"'
+      ]},
+      { name: 'Completo', tagline: 'Site com vendas e dashboard', features: [
+        'Tudo do plano Básico',
+        'Banco de Dados',
+        'Integração para Vendas',
+        'Dashboard',
+        'Checkout direcionado para a forma de pagamento',
+        'Domínio personalizado',
+        'CRUD completo (criar, editar e deletar dados)'
+      ]},
+      { name: 'Premium', tagline: 'Site com automações', features: [
+        'Tudo dos planos Básico e Completo',
+        'Sistema de Feedback',
+        'Automatização do envio dos produtos digitais por email',
+        'Certificado SSL (segurança)'
+      ]}
+    ],
+    'Crie seu App': [
+      { name: 'Básico (MVP)', tagline: 'App funcional básico', features: [
+        'Design moderno e responsivo',
+        'Navegação intuitiva entre telas',
+        'Funcionalidades essenciais do app',
+        'Layout adaptado para Android e iOS',
+        'Imagens e vídeos integrados',
+        'App verificado como Seguro'
+      ]},
+      { name: 'Completo', tagline: 'App com banco de dados', features: [
+        'Tudo do plano Básico',
+        'Banco de dados integrado',
+        'Cadastro e login de usuários',
+        'Área do usuário personalizada',
+        'CRUD completo (criar, editar e deletar dados)',
+        'Design profissional e elaborado',
+        'Sistema de chave única ou login',
+        'Domínio personalizado'
+      ]},
+      { name: 'Premium', tagline: 'App com integração', features: [
+        'Tudo dos planos Básico e Completo',
+        'Integração para vendas e pagamentos',
+        'Dashboard com painel de controle',
+        'Checkout direcionado para pagamento',
+        'Integração com APIs externas (WhatsApp, Google Maps etc.)',
+        'Certificado SSL (segurança)'
+      ]}
+    ]
+  };
+
+  function renderTiers(productName) {
+    const wrap = document.getElementById('meet-tiers');
+    const tiers = TIERS[productName] || [];
+    wrap.innerHTML = tiers.map((t, i) => `
+      <label class="tier-option" data-tier="${t.name}" style="display:block; cursor:pointer; background:var(--surface2); border:1px solid var(--border); border-radius:12px; padding:14px 16px; transition:border-color 0.2s, background 0.2s;">
+        <div style="display:flex; align-items:center; gap:10px; margin-bottom:8px;">
+          <input type="radio" name="meet-tier-radio" value="${t.name}" style="accent-color:var(--accent, #7c5cff);">
+          <span style="font-family:'Syne',sans-serif; font-weight:700; font-size:15px;">${t.name}</span>
+          <span style="font-size:12px; color:var(--muted);">— ${t.tagline}</span>
+        </div>
+        <ul style="margin:0; padding-left:22px; color:var(--muted); font-size:12.5px; line-height:1.55;">
+          ${t.features.map(f => `<li>${f}</li>`).join('')}
+        </ul>
+      </label>
+    `).join('');
+    wrap.querySelectorAll('input[name="meet-tier-radio"]').forEach(r => {
+      r.addEventListener('change', () => {
+        document.getElementById('meet-tier').value = r.value;
+        wrap.querySelectorAll('.tier-option').forEach(opt => {
+          const sel = opt.querySelector('input').checked;
+          opt.style.borderColor = sel ? 'var(--accent, #7c5cff)' : 'var(--border)';
+          opt.style.background = sel ? 'rgba(124,92,255,0.08)' : 'var(--surface2)';
+        });
+      });
+    });
+  }
+
   function openMeetingModal(productName) {
     meetingProduct = productName;
     document.getElementById('meetingTitle').textContent = 'Marcar Reunião — ' + productName;
     document.getElementById('meetingEmoji').textContent = productName === 'Crie seu Site' ? '🌐' : '📱';
+    document.getElementById('meet-tier').value = '';
+    renderTiers(productName);
     document.getElementById('meetingOverlay').classList.add('open');
   }
 
@@ -2031,20 +2108,20 @@ InviseStore — Guias & Apps`
     const name   = document.getElementById('meet-name').value.trim();
     const phone  = document.getElementById('meet-phone').value.trim();
     const email  = document.getElementById('meet-email').value.trim();
-    const budget = document.getElementById('meet-budget').value;
-    const start  = document.getElementById('meet-start').value;
+    const tier  = document.getElementById('meet-tier').value;
+    const start = document.getElementById('meet-start').value;
 
     if (!name)  { showToast('Informe seu nome.'); return; }
     if (!phone) { showToast('Informe seu WhatsApp.'); return; }
     if (!email || !email.includes('@')) { showToast('Informe um e-mail válido.'); return; }
-    if (!budget) { showToast('Selecione uma faixa de orçamento.'); return; }
-    if (!start)  { showToast('Selecione quando precisa começar.'); return; }
+    if (!tier)  { showToast('Selecione o nível do projeto.'); return; }
+    if (!start) { showToast('Selecione quando precisa começar.'); return; }
 
     const meeting = {
       id: Date.now(),
       date: new Date().toISOString(),
       product: meetingProduct,
-      name, phone, email, budget, startWhen: start,
+      name, phone, email, tier, startWhen: start,
       status: 'Aguardando contato'
     };
 
@@ -2067,7 +2144,7 @@ InviseStore — Guias & Apps`
     document.getElementById('meet-name').value = '';
     document.getElementById('meet-phone').value = '';
     document.getElementById('meet-email').value = '';
-    document.getElementById('meet-budget').value = '';
+    document.getElementById('meet-tier').value = '';
     document.getElementById('meet-start').value = '';
     showToast('✅ Recebemos sua solicitação! Em breve entraremos em contato.');
   }
