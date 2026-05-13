@@ -1,0 +1,16 @@
+{
+  "name": "invise-store",
+  "version": "1.0.0",
+  "description": "InviseStore - Ebooks, Planilhas & Apps",
+  "private": true,
+  "scripts": {
+    "dev": "python3 -m http.server 8000",
+    "build": "echo 'Static HTML - no build needed'"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "@vercel/speed-insights": "^1.0.12"
+  }
+}
