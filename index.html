@@ -264,32 +264,59 @@
   .see-all:hover { border-color: var(--accent); }
 
   /* CATEGORY TABS */
+  .tabs-label {
+    text-align: center;
+    color: var(--muted);
+    font-size: 15px;
+    margin-bottom: 18px;
+    letter-spacing: 0.3px;
+  }
+
   .tabs {
     display: flex;
-    gap: 8px;
-    margin-bottom: 40px;
+    gap: 16px;
+    margin-bottom: 48px;
     flex-wrap: wrap;
+    justify-content: center;
   }
 
   .tab {
-    padding: 9px 22px;
-    border-radius: 100px;
-    border: 1px solid var(--border);
-    background: transparent;
-    color: var(--muted);
-    font-size: 14px;
-    font-weight: 500;
+    padding: 18px 32px;
+    border-radius: 16px;
+    border: 2px solid var(--border);
+    background: var(--surface2, rgba(255,255,255,0.02));
+    color: var(--text);
+    font-size: 17px;
+    font-weight: 600;
     cursor: pointer;
-    transition: all 0.2s;
+    transition: all 0.25s ease;
     font-family: 'DM Sans', sans-serif;
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    min-width: 140px;
+    justify-content: center;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.08);
   }
 
-  .tab:hover { border-color: rgba(255,255,255,0.15); color: var(--text); }
+  .tab:hover {
+    border-color: var(--accent);
+    color: var(--text);
+    transform: translateY(-2px);
+    box-shadow: 0 6px 16px rgba(0,0,0,0.18);
+  }
 
   .tab.active {
     background: var(--accent);
     border-color: var(--accent);
     color: #fff;
+    transform: translateY(-2px);
+    box-shadow: 0 8px 20px rgba(0,0,0,0.25);
+  }
+
+  @media (max-width: 600px) {
+    .tab { padding: 14px 20px; font-size: 15px; min-width: 0; flex: 1 1 calc(50% - 16px); }
+    .tabs { gap: 10px; }
   }
 
   /* PRODUCT GRID */
@@ -998,10 +1025,11 @@
   </div>
 
   <!-- TABS (escolha de categoria primeiro) -->
+  <p class="tabs-label">Escolha uma categoria para ver os produtos:</p>
   <div class="tabs">
-    <button class="tab active" onclick="filterCategory('todos', this)">Todos</button>
-    <button class="tab" onclick="filterCategory('apps', this)">⚡ App</button>
-    <button class="tab" onclick="filterCategory('ebooks', this)">📚 Guia</button>
+    <button class="tab active" onclick="filterCategory('todos', this)">✨ Todos</button>
+    <button class="tab" onclick="filterCategory('apps', this)">⚡ Apps</button>
+    <button class="tab" onclick="filterCategory('ebooks', this)">📚 Guias</button>
     <button class="tab" onclick="filterCategory('pacotes', this)">🎁 Pacotes</button>
   </div>
 
@@ -1152,40 +1180,6 @@
         <div class="product-footer">
           <div class="product-price"><span>R$ 50</span>R$ 35</div>
           <button class="btn-buy" onclick="event.stopPropagation(); addToCartDirect('HabitPlan: Hábitos & Metas + Guia Hábitos','R$ 35','Combo completo: Guia Como Criar Hábitos que Grudam + App HabitPlan.',['Guia Como Criar Hábitos que Grudam','App HabitPlan completo','Streaks e lembretes','Rastreamento diário','Acesso vitalício a tudo'],'app','R$ 50')">+ Carrinho</button>
-        </div>
-      </div>
-    </div>
-
-    <!-- Serviço: Crie seu Site -->
-    <div class="product-card" data-cat="servicos" onclick="openMeetingModal('Crie seu Site')">
-      <div class="product-thumb thumb-mkt">
-        <div class="product-badge" style="background:rgba(255,215,0,0.2);color:#ffd700;border:1px solid rgba(255,215,0,0.4);">Serviço</div>
-        🌐
-      </div>
-      <div class="product-info">
-        <div class="product-name">Crie seu Site</div>
-        <div class="product-rating"><span class="stars">★★★★★</span><span class="rating-count">(novo)</span></div>
-        <p class="product-desc">Site profissional sob medida pra você ou seu negócio. Design moderno, rápido e responsivo.</p>
-        <div class="product-footer">
-          <div class="product-price" style="font-size:14px;color:var(--muted);">Sob orçamento</div>
-          <button class="btn-buy" onclick="event.stopPropagation(); openMeetingModal('Crie seu Site')">Marcar Reunião</button>
-        </div>
-      </div>
-    </div>
-
-    <!-- Serviço: Crie seu App -->
-    <div class="product-card" data-cat="servicos" onclick="openMeetingModal('Crie seu App')">
-      <div class="product-thumb thumb-app">
-        <div class="product-badge" style="background:rgba(255,215,0,0.2);color:#ffd700;border:1px solid rgba(255,215,0,0.4);">Serviço</div>
-        📱
-      </div>
-      <div class="product-info">
-        <div class="product-name">Crie seu App</div>
-        <div class="product-rating"><span class="stars">★★★★★</span><span class="rating-count">(novo)</span></div>
-        <p class="product-desc">App web ou mobile sob medida. Da ideia ao lançamento, com o time certo pra te guiar.</p>
-        <div class="product-footer">
-          <div class="product-price" style="font-size:14px;color:var(--muted);">Sob orçamento</div>
-          <button class="btn-buy" onclick="event.stopPropagation(); openMeetingModal('Crie seu App')">Marcar Reunião</button>
         </div>
       </div>
     </div>
