@@ -765,6 +765,139 @@
 
   .author-role { color: var(--muted); font-size: 12px; }
 
+  /* QUEM SOMOS */
+  .about-section {
+    padding: 100px 48px;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .about-section::before {
+    content: '';
+    position: absolute;
+    top: -120px;
+    right: -120px;
+    width: 500px;
+    height: 500px;
+    background: radial-gradient(circle, rgba(108,99,255,0.12) 0%, transparent 70%);
+    pointer-events: none;
+  }
+
+  .about-inner {
+    max-width: 1100px;
+    margin: 0 auto;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 80px;
+    align-items: center;
+  }
+
+  .about-text-col {}
+
+  .about-label {
+    display: inline-block;
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: var(--accent);
+    background: rgba(108,99,255,0.12);
+    border: 1px solid rgba(108,99,255,0.25);
+    border-radius: 100px;
+    padding: 5px 14px;
+    margin-bottom: 20px;
+  }
+
+  .about-text-col h2 {
+    margin-bottom: 28px;
+    line-height: 1.15;
+  }
+
+  .about-text-col p {
+    color: var(--muted);
+    font-size: 15px;
+    line-height: 1.75;
+    margin-bottom: 16px;
+  }
+
+  .about-text-col p:last-of-type { margin-bottom: 0; }
+
+  .about-visual-col {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+  }
+
+  .about-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 24px 28px;
+    display: flex;
+    align-items: flex-start;
+    gap: 18px;
+    transition: border-color 0.2s, transform 0.2s;
+  }
+
+  .about-card:hover {
+    border-color: rgba(108,99,255,0.35);
+    transform: translateX(4px);
+  }
+
+  .about-card-icon {
+    font-size: 28px;
+    flex-shrink: 0;
+    line-height: 1;
+    margin-top: 2px;
+  }
+
+  .about-card-title {
+    font-family: 'Syne', sans-serif;
+    font-weight: 700;
+    font-size: 15px;
+    margin-bottom: 4px;
+  }
+
+  .about-card-desc {
+    color: var(--muted);
+    font-size: 13px;
+    line-height: 1.55;
+  }
+
+  .about-social {
+    display: flex;
+    gap: 12px;
+    margin-top: 32px;
+    flex-wrap: wrap;
+  }
+
+  .about-social a {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    color: var(--muted);
+    text-decoration: none;
+    font-size: 13px;
+    font-weight: 500;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 100px;
+    padding: 9px 18px;
+    transition: color 0.2s, border-color 0.2s;
+  }
+
+  .about-social a:hover {
+    color: var(--text);
+    border-color: rgba(255,255,255,0.2);
+  }
+
+  @media (max-width: 768px) {
+    .about-inner {
+      grid-template-columns: 1fr;
+      gap: 48px;
+    }
+  }
+
   /* NEWSLETTER */
   .newsletter {
     padding: 80px 48px;
@@ -1089,7 +1222,6 @@
 <section class="section" id="produtos">
   <div class="section-header">
     <h2>Nossos Produtos</h2>
-    <a href="#" class="see-all">Ver todos →</a>
   </div>
 
   <!-- CATEGORY PICKER -->
@@ -1148,23 +1280,6 @@
   <!-- GRID -->
   <div class="product-grid" id="productGrid">
 
-    <!-- Guia: Dono do Seu Dinheiro -->
-    <div class="product-card" data-cat="ebooks" onclick="openModal('Dono do Seu Dinheiro', 'R$ 25', 'Aprenda a organizar suas finanças, sair das dívidas e começar a investir. Linguagem simples, resultados reais.', ['PDF + EPUB incluso', '130 páginas', 'App bônus', 'Acesso vitalício', 'PIX, Cartão ou Boleto'], 'ebook', null)">
-      <div class="product-thumb thumb-finance">
-        <div class="product-badge badge-ebook">Guia</div>
-        💰
-      </div>
-      <div class="product-info">
-        <div class="product-name">Dono do Seu Dinheiro</div>
-        <div class="product-rating"><span class="stars">★★★★★</span><span class="rating-count">(143)</span></div>
-        <p class="product-desc">Do endividado ao investidor. Guia prático de finanças para quem quer mudar de vida.</p>
-        <div class="product-footer">
-          <div class="product-price">R$ 25</div>
-          <button class="btn-buy" onclick="event.stopPropagation(); addToCartDirect('Dono do Seu Dinheiro','R$ 25','Aprenda a organizar suas finanças, sair das dívidas e começar a investir.',['PDF + EPUB incluso','130 páginas','App bônus','Acesso vitalício'],'ebook',null)">+ Carrinho</button>
-        </div>
-      </div>
-    </div>
-
     <!-- App: FinanPro -->
     <div class="product-card" data-cat="apps" onclick="openModal('FinanPro: Controle de Gastos', 'R$ 30', 'Aplicativo completo para controle financeiro pessoal. Gerencie receitas, despesas, metas e relatórios em um só lugar.', ['App web responsivo', 'Controle de receitas e despesas', 'Relatórios automáticos', 'Metas financeiras', 'Acesso vitalício'], 'app', null)">
       <div class="product-thumb thumb-finance">
@@ -1195,6 +1310,40 @@
         <div class="product-footer">
           <div class="product-price">R$ 30</div>
           <button class="btn-buy" onclick="event.stopPropagation(); addToCartDirect('Monte Seu Treino','R$ 30','Monte treinos personalizados de forma simples e acompanhe sua evolução.',['App web responsivo','Criação de treinos personalizados','Histórico de evolução','Fichas prontas','Acesso vitalício'],'app',null)">+ Carrinho</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- App: HabitPlan -->
+    <div class="product-card" data-cat="apps" onclick="openModal('HabitPlan: Hábitos & Metas', 'R$ 30', 'Aplicativo para planejar, rastrear e consolidar seus hábitos com lembretes, streaks e relatórios de progresso.', ['App web responsivo', 'Rastreamento de hábitos', 'Streaks e recompensas', 'Lembretes diários', 'Relatórios de progresso', 'Acesso vitalício'], 'app', null)">
+      <div class="product-thumb thumb-design">
+        <div class="product-badge badge-app">App</div>
+        📅
+      </div>
+      <div class="product-info">
+        <div class="product-name">HabitPlan: Hábitos & Metas</div>
+        <div class="product-rating"><span class="stars">★★★★★</span><span class="rating-count">(47)</span></div>
+        <p class="product-desc">Planeje e rastreie seus hábitos com streaks, lembretes e relatórios de progresso.</p>
+        <div class="product-footer">
+          <div class="product-price">R$ 30</div>
+          <button class="btn-buy" onclick="event.stopPropagation(); addToCartDirect('HabitPlan: Hábitos & Metas','R$ 30','Aplicativo para planejar, rastrear e consolidar seus hábitos.',['App web responsivo','Rastreamento de hábitos','Streaks e recompensas','Lembretes diários','Relatórios de progresso','Acesso vitalício'],'app',null)">+ Carrinho</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Guia: Dono do Seu Dinheiro -->
+    <div class="product-card" data-cat="ebooks" onclick="openModal('Dono do Seu Dinheiro', 'R$ 25', 'Aprenda a organizar suas finanças, sair das dívidas e começar a investir. Linguagem simples, resultados reais.', ['PDF + EPUB incluso', '130 páginas', 'App bônus', 'Acesso vitalício', 'PIX, Cartão ou Boleto'], 'ebook', null)">
+      <div class="product-thumb thumb-finance">
+        <div class="product-badge badge-ebook">Guia</div>
+        💰
+      </div>
+      <div class="product-info">
+        <div class="product-name">Dono do Seu Dinheiro</div>
+        <div class="product-rating"><span class="stars">★★★★★</span><span class="rating-count">(143)</span></div>
+        <p class="product-desc">Do endividado ao investidor. Guia prático de finanças para quem quer mudar de vida.</p>
+        <div class="product-footer">
+          <div class="product-price">R$ 25</div>
+          <button class="btn-buy" onclick="event.stopPropagation(); addToCartDirect('Dono do Seu Dinheiro','R$ 25','Aprenda a organizar suas finanças, sair das dívidas e começar a investir.',['PDF + EPUB incluso','130 páginas','App bônus','Acesso vitalício'],'ebook',null)">+ Carrinho</button>
         </div>
       </div>
     </div>
@@ -1246,23 +1395,6 @@
         <div class="product-footer">
           <div class="product-price">R$ 20</div>
           <button class="btn-buy" onclick="event.stopPropagation(); addToCartDirect('Como Criar Hábitos que Grudam','R$ 20','O método científico para criar hábitos duradouros e eliminar os que te travam.',['PDF + EPUB incluso','Método baseado em ciência','Templates de acompanhamento','Exemplos práticos','Acesso vitalício'],'ebook',null)">+ Carrinho</button>
-        </div>
-      </div>
-    </div>
-
-    <!-- App: HabitPlan -->
-    <div class="product-card" data-cat="apps" onclick="openModal('HabitPlan: Hábitos & Metas', 'R$ 30', 'Aplicativo para planejar, rastrear e consolidar seus hábitos com lembretes, streaks e relatórios de progresso.', ['App web responsivo', 'Rastreamento de hábitos', 'Streaks e recompensas', 'Lembretes diários', 'Relatórios de progresso', 'Acesso vitalício'], 'app', null)">
-      <div class="product-thumb thumb-design">
-        <div class="product-badge badge-app">App</div>
-        📅
-      </div>
-      <div class="product-info">
-        <div class="product-name">HabitPlan: Hábitos & Metas</div>
-        <div class="product-rating"><span class="stars">★★★★★</span><span class="rating-count">(47)</span></div>
-        <p class="product-desc">Planeje e rastreie seus hábitos com streaks, lembretes e relatórios de progresso.</p>
-        <div class="product-footer">
-          <div class="product-price">R$ 30</div>
-          <button class="btn-buy" onclick="event.stopPropagation(); addToCartDirect('HabitPlan: Hábitos & Metas','R$ 30','Aplicativo para planejar, rastrear e consolidar seus hábitos.',['App web responsivo','Rastreamento de hábitos','Streaks e recompensas','Lembretes diários','Relatórios de progresso','Acesso vitalício'],'app',null)">+ Carrinho</button>
         </div>
       </div>
     </div>
@@ -1390,14 +1522,46 @@
 <!-- QUEM SOMOS -->
 <section class="about-section" id="quem-somos">
   <div class="about-inner">
-    <h2>Quem somos</h2>
-    <p>A <strong>InviseStore</strong> nasceu de uma frustração real: anos sem controle sobre dinheiro e sem conseguir manter um hábito por mais de duas semanas. Testamos planilhas complicadas, apps cheios de função inútil, ebooks que eram 80% teoria e 20% prático.</p>
-    <p>Nada funcionava.</p>
-    <p>Cada produto aqui foi criado a partir do que nós mesmos testamos, quebramos e reconstruímos até funcionar de verdade. Sem enrolação, sem conteúdo de preenchimento, sem promessa que não entrega.</p>
-    <p>Se você está aqui, provavelmente está cansado de tentar e não ver resultado. É exatamente pra isso que a InviseStore existe.</p>
-    <div class="about-social">
-      <a href="https://instagram.com/invisestore" target="_blank" rel="noopener">📸 @invisestore no Instagram</a>
-      <a href="https://tiktok.com/@invise.store" target="_blank" rel="noopener">🎵 @invise.store no TikTok</a>
+    <div class="about-text-col">
+      <span class="about-label">Nossa história</span>
+      <h2>Quem somos</h2>
+      <p>A <strong>InviseStore</strong> nasceu de uma frustração real: anos sem controle sobre dinheiro e sem conseguir manter um hábito por mais de duas semanas.</p>
+      <p>Testamos planilhas complicadas, apps cheios de função inútil, ebooks que eram 80% teoria e 20% prático. Nada funcionava.</p>
+      <p>Cada produto aqui foi criado a partir do que nós mesmos testamos, quebramos e reconstruímos até funcionar de verdade. Sem enrolação, sem promessa que não entrega.</p>
+      <div class="about-social">
+        <a href="https://instagram.com/invisestore" target="_blank" rel="noopener">📸 Instagram</a>
+        <a href="https://tiktok.com/@invise.store" target="_blank" rel="noopener">🎵 TikTok</a>
+      </div>
+    </div>
+    <div class="about-visual-col">
+      <div class="about-card">
+        <div class="about-card-icon">🔬</div>
+        <div>
+          <div class="about-card-title">Testado por nós primeiro</div>
+          <div class="about-card-desc">Nenhum produto vai pro ar sem ter sido usado e validado internamente por semanas.</div>
+        </div>
+      </div>
+      <div class="about-card">
+        <div class="about-card-icon">⚡</div>
+        <div>
+          <div class="about-card-title">Sem enrolação</div>
+          <div class="about-card-desc">Conteúdo direto ao ponto. Zero preenchimento, zero teoria inútil. Só o que funciona.</div>
+        </div>
+      </div>
+      <div class="about-card">
+        <div class="about-card-icon">🔒</div>
+        <div>
+          <div class="about-card-title">Acesso vitalício</div>
+          <div class="about-card-desc">Pague uma vez, use para sempre. Todas as atualizações inclusas sem custo adicional.</div>
+        </div>
+      </div>
+      <div class="about-card">
+        <div class="about-card-icon">💬</div>
+        <div>
+          <div class="about-card-title">Suporte real</div>
+          <div class="about-card-desc">Se tiver dúvida ou problema, tem alguém de verdade para responder — não um bot.</div>
+        </div>
+      </div>
     </div>
   </div>
 </section>
