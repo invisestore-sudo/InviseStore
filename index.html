@@ -263,67 +263,135 @@
 
   .see-all:hover { border-color: var(--accent); }
 
-  /* CATEGORY TABS */
-  .tabs-label {
+  /* CATEGORY PICKER */
+  .category-picker {
+    margin-bottom: 52px;
+  }
+
+  .category-picker-heading {
     text-align: center;
-    color: var(--muted);
+    margin-bottom: 10px;
+  }
+
+  .category-picker-heading h3 {
+    font-size: 22px;
+    font-weight: 700;
+    color: var(--text);
+    margin: 0 0 6px;
+  }
+
+  .category-picker-heading p {
     font-size: 15px;
-    margin-bottom: 18px;
-    letter-spacing: 0.3px;
+    color: var(--muted);
+    margin: 0;
   }
 
   .tabs {
-    display: flex;
-    gap: 16px;
-    margin-bottom: 48px;
-    flex-wrap: wrap;
-    justify-content: center;
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 14px;
+    margin-top: 28px;
   }
 
   .tab {
-    padding: 18px 32px;
-    border-radius: 16px;
+    position: relative;
+    padding: 28px 16px 22px;
+    border-radius: 20px;
     border: 2px solid var(--border);
-    background: var(--surface2, rgba(255,255,255,0.02));
+    background: rgba(255,255,255,0.03);
     color: var(--text);
-    font-size: 17px;
-    font-weight: 600;
+    font-family: 'DM Sans', sans-serif;
     cursor: pointer;
     transition: all 0.25s ease;
-    font-family: 'DM Sans', sans-serif;
-    display: inline-flex;
+    display: flex;
+    flex-direction: column;
     align-items: center;
     gap: 10px;
-    min-width: 140px;
-    justify-content: center;
-    box-shadow: 0 2px 6px rgba(0,0,0,0.08);
+    text-align: center;
+  }
+
+  .tab-icon {
+    font-size: 36px;
+    line-height: 1;
+  }
+
+  .tab-name {
+    font-size: 17px;
+    font-weight: 700;
+    display: block;
+  }
+
+  .tab-desc {
+    font-size: 12px;
+    color: var(--muted);
+    line-height: 1.4;
+    display: block;
   }
 
   .tab:hover {
     border-color: var(--accent);
-    color: var(--text);
-    transform: translateY(-2px);
-    box-shadow: 0 6px 16px rgba(0,0,0,0.18);
+    background: rgba(255,255,255,0.06);
+    transform: translateY(-3px);
+    box-shadow: 0 8px 24px rgba(0,0,0,0.2);
   }
 
   .tab.active {
     background: var(--accent);
     border-color: var(--accent);
     color: #fff;
-    transform: translateY(-2px);
-    box-shadow: 0 8px 20px rgba(0,0,0,0.25);
+    transform: translateY(-3px);
+    box-shadow: 0 10px 28px rgba(0,0,0,0.3);
   }
 
-  @media (max-width: 600px) {
-    .tab { padding: 14px 20px; font-size: 15px; min-width: 0; flex: 1 1 calc(50% - 16px); }
-    .tabs { gap: 10px; }
+  .tab.active .tab-desc { color: rgba(255,255,255,0.75); }
+
+  .tab-check {
+    position: absolute;
+    top: 12px;
+    right: 14px;
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    background: rgba(255,255,255,0.25);
+    display: none;
+    align-items: center;
+    justify-content: center;
+    font-size: 11px;
+    font-weight: 700;
+  }
+
+  .tab.active .tab-check { display: flex; }
+
+  /* "choose first" empty state */
+  .products-placeholder {
+    text-align: center;
+    padding: 64px 24px;
+    color: var(--muted);
+    border: 2px dashed var(--border);
+    border-radius: 20px;
+    margin-top: 8px;
+  }
+
+  .products-placeholder .ph-icon { font-size: 48px; margin-bottom: 16px; }
+  .products-placeholder h4 { font-size: 20px; font-weight: 700; color: var(--text); margin: 0 0 8px; }
+  .products-placeholder p { font-size: 15px; margin: 0; }
+
+  @media (max-width: 700px) {
+    .tabs { grid-template-columns: repeat(2, 1fr); gap: 10px; }
+    .tab { padding: 22px 12px 18px; }
+    .tab-icon { font-size: 30px; }
+    .tab-name { font-size: 15px; }
   }
 
   /* PRODUCT GRID */
   .product-grid {
-    display: grid;
+    display: none;
     grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
     gap: 24px;
+  }
+
+  .product-grid.visible {
+    display: grid;
   }
 
   .product-card {
@@ -1024,17 +1092,49 @@
     <a href="#" class="see-all">Ver todos →</a>
   </div>
 
-  <!-- TABS (escolha de categoria primeiro) -->
-  <p class="tabs-label">Escolha uma categoria para ver os produtos:</p>
-  <div class="tabs">
-    <button class="tab active" onclick="filterCategory('todos', this)">✨ Todos</button>
-    <button class="tab" onclick="filterCategory('apps', this)">⚡ Apps</button>
-    <button class="tab" onclick="filterCategory('ebooks', this)">📚 Guias</button>
-    <button class="tab" onclick="filterCategory('pacotes', this)">🎁 Pacotes</button>
+  <!-- CATEGORY PICKER -->
+  <div class="category-picker">
+    <div class="category-picker-heading">
+      <h3>O que você está procurando?</h3>
+      <p>Escolha uma categoria abaixo para ver os produtos disponíveis</p>
+    </div>
+    <div class="tabs">
+      <button class="tab" data-cat="todos" onclick="filterCategory('todos', this)">
+        <span class="tab-check">✓</span>
+        <span class="tab-icon">✨</span>
+        <span class="tab-name">Todos</span>
+        <span class="tab-desc">Ver tudo de uma vez</span>
+      </button>
+      <button class="tab" data-cat="apps" onclick="filterCategory('apps', this)">
+        <span class="tab-check">✓</span>
+        <span class="tab-icon">⚡</span>
+        <span class="tab-name">Apps</span>
+        <span class="tab-desc">Ferramentas e aplicativos digitais</span>
+      </button>
+      <button class="tab" data-cat="ebooks" onclick="filterCategory('ebooks', this)">
+        <span class="tab-check">✓</span>
+        <span class="tab-icon">📚</span>
+        <span class="tab-name">Guias</span>
+        <span class="tab-desc">E-books e guias práticos</span>
+      </button>
+      <button class="tab" data-cat="pacotes" onclick="filterCategory('pacotes', this)">
+        <span class="tab-check">✓</span>
+        <span class="tab-icon">🎁</span>
+        <span class="tab-name">Pacotes</span>
+        <span class="tab-desc">Combos com melhor custo-benefício</span>
+      </button>
+    </div>
+  </div>
+
+  <!-- Placeholder mostrado até o usuário escolher -->
+  <div class="products-placeholder" id="productPlaceholder">
+    <div class="ph-icon">👆</div>
+    <h4>Escolha uma categoria acima</h4>
+    <p>Selecione Apps, Guias, Pacotes ou Todos para ver os produtos disponíveis.</p>
   </div>
 
   <!-- DESTAQUE -->
-  <div class="featured-card">
+  <div class="featured-card" id="featuredCard" style="display:none;">
     <div>
       <div class="featured-label">⭐ Mais vendido do mês</div>
       <div class="featured-title">HabitPlan + Guia Hábitos</div>
@@ -1963,6 +2063,17 @@ InviseStore — Guias & Apps`
   function filterCategory(cat, btn) {
     document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
     btn.classList.add('active');
+
+    const placeholder = document.getElementById('productPlaceholder');
+    const grid = document.getElementById('productGrid');
+    const featured = document.getElementById('featuredCard');
+
+    placeholder.style.display = 'none';
+    grid.classList.add('visible');
+
+    // featured card is only relevant for pacotes/todos
+    if (featured) featured.style.display = (cat === 'todos' || cat === 'pacotes') ? '' : 'none';
+
     document.querySelectorAll('.product-card').forEach(card => {
       card.style.display = (cat === 'todos' || card.dataset.cat === cat) ? '' : 'none';
     });
