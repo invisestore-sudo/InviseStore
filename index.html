@@ -1117,7 +1117,7 @@
     margin: 12px 0;
   }
 
-  .modal-desc { color: var(--muted); font-size: 14px; line-height: 1.6; margin-bottom: 24px; }
+  .modal-desc { color: var(--text); font-size: 15px; line-height: 1.75; margin-bottom: 24px; font-weight: 400; }
 
   .modal-features { list-style: none; margin-bottom: 28px; display: flex; flex-direction: column; gap: 10px; }
 
@@ -1218,6 +1218,77 @@
   </div>
 </div>
 
+<!-- QUEM SOMOS -->
+<section class="about-section" id="quem-somos">
+  <div class="about-inner">
+    <div class="about-text-col">
+      <span class="about-label">Nossa história</span>
+      <h2>Quem somos</h2>
+      <p>A <strong>InviseStore</strong> nasceu de uma frustração real: anos sem controle sobre dinheiro e sem conseguir manter um hábito por mais de duas semanas.</p>
+      <p>Testamos planilhas complicadas, apps cheios de função inútil, ebooks que eram 80% teoria e 20% prático. Nada funcionava.</p>
+      <p>Cada produto aqui foi criado a partir do que nós mesmos testamos, quebramos e reconstruímos até funcionar de verdade. Sem enrolação, sem promessa que não entrega.</p>
+      <div class="about-social">
+        <a href="https://instagram.com/invisestore" target="_blank" rel="noopener">📸 Instagram</a>
+        <a href="https://tiktok.com/@invise.store" target="_blank" rel="noopener">🎵 TikTok</a>
+      </div>
+    </div>
+    <div class="about-visual-col">
+      <div class="about-card">
+        <div class="about-card-icon">🔬</div>
+        <div>
+          <div class="about-card-title">Testado por nós primeiro</div>
+          <div class="about-card-desc">Nenhum produto vai pro ar sem ter sido usado e validado internamente por semanas.</div>
+        </div>
+      </div>
+      <div class="about-card">
+        <div class="about-card-icon">⚡</div>
+        <div>
+          <div class="about-card-title">Sem enrolação</div>
+          <div class="about-card-desc">Conteúdo direto ao ponto. Zero preenchimento, zero teoria inútil. Só o que funciona.</div>
+        </div>
+      </div>
+      <div class="about-card">
+        <div class="about-card-icon">🔒</div>
+        <div>
+          <div class="about-card-title">Acesso vitalício</div>
+          <div class="about-card-desc">Pague uma vez, use para sempre. Todas as atualizações inclusas sem custo adicional.</div>
+        </div>
+      </div>
+      <div class="about-card">
+        <div class="about-card-icon">💬</div>
+        <div>
+          <div class="about-card-title">Suporte real</div>
+          <div class="about-card-desc">Se tiver dúvida ou problema, tem alguém de verdade para responder — não um bot.</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- COMO FUNCIONA -->
+<section class="how-section" id="como-funciona">
+  <div style="max-width: 1200px; margin: 0 auto;">
+    <h2>Como funciona</h2>
+    <div class="steps-grid">
+      <div class="step">
+        <div class="step-num">1</div>
+        <div class="step-title">Escolha seu produto</div>
+        <p class="step-desc">Navegue pelo catálogo e encontre o produto digital ideal para você.</p>
+      </div>
+      <div class="step">
+        <div class="step-num">2</div>
+        <div class="step-title">Pagamento seguro</div>
+        <p class="step-desc">Pague via PIX, cartão de crédito ou boleto. Seguro e com confirmação rápida.</p>
+      </div>
+      <div class="step">
+        <div class="step-num">3</div>
+        <div class="step-title">Acesso imediato</div>
+        <p class="step-desc">Receba o link de download ou acesso no seu e-mail em segundos.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
 <!-- PRODUTOS -->
 <section class="section" id="produtos">
   <div class="section-header">
@@ -1272,7 +1343,7 @@
       <div class="featured-title">HabitPlan + Guia Hábitos</div>
       <p class="featured-desc">O combo perfeito: o método científico para criar hábitos duradouros <strong>mais</strong> o app para colocar tudo em prática. Rastreie, mantenha streaks e evolua todo dia.</p>
       <div class="featured-price"><small>R$ 50</small>R$ 35</div>
-      <button class="btn-primary" onclick="addToCartDirect('HabitPlan: Hábitos & Metas + Guia Hábitos', 'R$ 35', 'Combo completo: Guia Como Criar Hábitos que Grudam + App HabitPlan.', ['Guia Como Criar Hábitos que Grudam', 'App HabitPlan completo', 'Streaks e lembretes', 'Rastreamento diário', 'Acesso vitalício a tudo'], 'app', 'R$ 50')">🛒 Adicionar ao carrinho</button>
+      <button class="btn-primary" onclick="addToCartDirect('HabitPlan: Hábitos & Metas + Guia Hábitos', 'R$ 35', 'Combo completo: Guia Como Criar Hábitos que Grudam + App HabitPlan.', ['Guia Como Criar Hábitos que Grudam', 'App HabitPlan completo', 'Streaks e lembretes', 'Rastreamento diário'], 'app', 'R$ 50')">🛒 Adicionar ao carrinho</button>
     </div>
     <div class="featured-visual">🎁<span class="featured-visual-label">Pacote completo</span></div>
   </div>
@@ -1281,7 +1352,7 @@
   <div class="product-grid" id="productGrid">
 
     <!-- App: FinanPro -->
-    <div class="product-card" data-cat="apps" onclick="openModal('FinanPro: Controle de Gastos', 'R$ 30', 'App completo para organizar suas finanças do jeito certo. Registre receitas, controle despesas, defina metas e acompanhe tudo por relatórios automáticos — tudo em um só lugar, sem complicação.', ['App web responsivo', 'Controle de receitas e despesas', 'Relatórios automáticos', 'Metas financeiras', 'Acesso vitalício'], 'app', null)">
+    <div class="product-card" data-cat="apps" onclick="openModal('FinanPro: Controle de Gastos', 'R$ 30', 'App completo para organizar suas finanças do jeito certo. Registre receitas, controle despesas, defina metas e acompanhe tudo por relatórios automáticos — tudo em um só lugar, sem complicação.', ['Controle de receitas e despesas', 'Relatórios automáticos', 'Metas financeiras'], 'app', null)">
       <div class="product-thumb thumb-finance">
         <div class="product-badge badge-app">App</div>
         📊
@@ -1291,13 +1362,13 @@
         <p class="product-desc">App completo para organizar suas finanças pessoais. Registre receitas, controle despesas, defina metas e acompanhe relatórios automáticos.</p>
         <div class="product-footer">
           <div class="product-price">R$ 30</div>
-          <button class="btn-buy" onclick="event.stopPropagation(); addToCartDirect('FinanPro: Controle de Gastos','R$ 30','Aplicativo completo para controle financeiro pessoal.',['App web responsivo','Controle de receitas e despesas','Relatórios automáticos','Metas financeiras','Acesso vitalício'],'app',null)">+ Carrinho</button>
+          <button class="btn-buy" onclick="event.stopPropagation(); addToCartDirect('FinanPro: Controle de Gastos','R$ 30','Aplicativo completo para controle financeiro pessoal.',['Controle de receitas e despesas','Relatórios automáticos','Metas financeiras'],'app',null)">+ Carrinho</button>
         </div>
       </div>
     </div>
 
     <!-- App: Monte Seu Treino -->
-    <div class="product-card" data-cat="apps" onclick="openModal('Monte Seu Treino', 'R$ 30', 'Crie treinos personalizados para o seu objetivo, acompanhe sua evolução semana a semana e nunca mais fique travado sem saber o que fazer na academia ou em casa.', ['App web responsivo', 'Criação de treinos personalizados', 'Histórico de evolução', 'Fichas prontas', 'Acesso vitalício'], 'app', null)">
+    <div class="product-card" data-cat="apps" onclick="openModal('Monte Seu Treino', 'R$ 30', 'Crie treinos personalizados para o seu objetivo, acompanhe sua evolução semana a semana e nunca mais fique travado sem saber o que fazer na academia ou em casa.', ['Criação de treinos personalizados', 'Histórico de evolução', 'Fichas prontas'], 'app', null)">
       <div class="product-thumb thumb-app">
         <div class="product-badge badge-app">App</div>
         🏋️
@@ -1307,13 +1378,13 @@
         <p class="product-desc">Crie treinos personalizados do zero, acompanhe sua evolução e nunca mais fique sem saber o que fazer na academia.</p>
         <div class="product-footer">
           <div class="product-price">R$ 30</div>
-          <button class="btn-buy" onclick="event.stopPropagation(); addToCartDirect('Monte Seu Treino','R$ 30','Monte treinos personalizados de forma simples e acompanhe sua evolução.',['App web responsivo','Criação de treinos personalizados','Histórico de evolução','Fichas prontas','Acesso vitalício'],'app',null)">+ Carrinho</button>
+          <button class="btn-buy" onclick="event.stopPropagation(); addToCartDirect('Monte Seu Treino','R$ 30','Monte treinos personalizados de forma simples e acompanhe sua evolução.',['Criação de treinos personalizados','Histórico de evolução','Fichas prontas'],'app',null)">+ Carrinho</button>
         </div>
       </div>
     </div>
 
     <!-- App: HabitPlan -->
-    <div class="product-card" data-cat="apps" onclick="openModal('HabitPlan: Hábitos & Metas', 'R$ 30', 'App completo para quem quer levar seus hábitos a sério. Planeje metas, mantenha streaks, receba lembretes no momento certo e visualize seu progresso com relatórios detalhados.', ['App web responsivo', 'Rastreamento de hábitos', 'Streaks e recompensas', 'Lembretes diários', 'Relatórios de progresso', 'Acesso vitalício'], 'app', null)">
+    <div class="product-card" data-cat="apps" onclick="openModal('HabitPlan: Hábitos & Metas', 'R$ 30', 'App completo para quem quer levar seus hábitos a sério. Planeje metas, mantenha streaks, receba lembretes no momento certo e visualize seu progresso com relatórios detalhados.', ['Rastreamento de hábitos', 'Streaks e recompensas', 'Lembretes diários', 'Relatórios de progresso'], 'app', null)">
       <div class="product-thumb thumb-design">
         <div class="product-badge badge-app">App</div>
         📅
@@ -1323,13 +1394,13 @@
         <p class="product-desc">App para planejar e rastrear seus hábitos com streaks, lembretes personalizados e relatórios de progresso.</p>
         <div class="product-footer">
           <div class="product-price">R$ 30</div>
-          <button class="btn-buy" onclick="event.stopPropagation(); addToCartDirect('HabitPlan: Hábitos & Metas','R$ 30','Aplicativo para planejar, rastrear e consolidar seus hábitos.',['App web responsivo','Rastreamento de hábitos','Streaks e recompensas','Lembretes diários','Relatórios de progresso','Acesso vitalício'],'app',null)">+ Carrinho</button>
+          <button class="btn-buy" onclick="event.stopPropagation(); addToCartDirect('HabitPlan: Hábitos & Metas','R$ 30','Aplicativo para planejar, rastrear e consolidar seus hábitos.',['Rastreamento de hábitos','Streaks e recompensas','Lembretes diários','Relatórios de progresso'],'app',null)">+ Carrinho</button>
         </div>
       </div>
     </div>
 
     <!-- Guia: Dono do Seu Dinheiro -->
-    <div class="product-card" data-cat="ebooks" onclick="openModal('Dono do Seu Dinheiro', 'R$ 25', 'Chega de mês acabando antes do salário. Este guia prático e direto te leva do endividamento ao primeiro investimento, com estratégias reais para quem quer mudar de vida financeira de vez.', ['PDF + EPUB incluso', '130 páginas', 'App bônus', 'Acesso vitalício', 'PIX, Cartão ou Boleto'], 'ebook', null)">
+    <div class="product-card" data-cat="ebooks" onclick="openModal('Dono do Seu Dinheiro', 'R$ 25', 'Chega de mês acabando antes do salário. Este guia prático e direto te leva do endividamento ao primeiro investimento, com estratégias reais para quem quer mudar de vida financeira de vez.', ['Como parar de se endividar de vez', 'Método de orçamento pessoal', 'Primeiros passos para investir'], 'ebook', null)">
       <div class="product-thumb thumb-finance">
         <div class="product-badge badge-ebook">Guia</div>
         💰
@@ -1339,13 +1410,13 @@
         <p class="product-desc">Pare de se endividar e comece a investir. Um guia prático e direto para quem quer transformar sua relação com o dinheiro de vez.</p>
         <div class="product-footer">
           <div class="product-price">R$ 25</div>
-          <button class="btn-buy" onclick="event.stopPropagation(); addToCartDirect('Dono do Seu Dinheiro','R$ 25','Aprenda a organizar suas finanças, sair das dívidas e começar a investir.',['PDF + EPUB incluso','130 páginas','App bônus','Acesso vitalício'],'ebook',null)">+ Carrinho</button>
+          <button class="btn-buy" onclick="event.stopPropagation(); addToCartDirect('Dono do Seu Dinheiro','R$ 25','Aprenda a organizar suas finanças, sair das dívidas e começar a investir.',[],'ebook',null)">+ Carrinho</button>
         </div>
       </div>
     </div>
 
     <!-- Guia: Ciência da Longevidade -->
-    <div class="product-card" data-cat="ebooks" onclick="openModal('Ciência da Longevidade', 'R$ 20', 'Baseado em ciência, este guia explora os pilares de uma vida longa e saudável: como dormir melhor, se alimentar com inteligência, se exercitar com consistência e cuidar do seu bem-estar mental.', ['PDF + EPUB incluso', 'Base científica atualizada', 'Guia prático de hábitos', 'Acesso vitalício'], 'ebook', null)">
+    <div class="product-card" data-cat="ebooks" onclick="openModal('Ciência da Longevidade', 'R$ 20', 'Baseado em ciência, este guia explora os pilares de uma vida longa e saudável: como dormir melhor, se alimentar com inteligência, se exercitar com consistência e cuidar do seu bem-estar mental.', ['Base científica atualizada', 'Guia prático de hábitos'], 'ebook', null)">
       <div class="product-thumb thumb-sheet">
         <div class="product-badge badge-ebook">Guia</div>
         🧬
@@ -1355,13 +1426,13 @@
         <p class="product-desc">Descubra os pilares científicos por trás de uma vida longa e saudável: sono de qualidade, nutrição, exercício e bem-estar mental.</p>
         <div class="product-footer">
           <div class="product-price">R$ 20</div>
-          <button class="btn-buy" onclick="event.stopPropagation(); addToCartDirect('Ciência da Longevidade','R$ 20','Descubra os pilares científicos de uma vida longa e saudável.',['PDF + EPUB incluso','Base científica atualizada','Guia prático de hábitos','Acesso vitalício'],'ebook',null)">+ Carrinho</button>
+          <button class="btn-buy" onclick="event.stopPropagation(); addToCartDirect('Ciência da Longevidade','R$ 20','Descubra os pilares científicos de uma vida longa e saudável.',['Base científica atualizada','Guia prático de hábitos'],'ebook',null)">+ Carrinho</button>
         </div>
       </div>
     </div>
 
     <!-- Guia: Do Zero à Primeira Passagem -->
-    <div class="product-card" data-cat="ebooks" onclick="openModal('Do Zero à Primeira Passagem', 'R$ 20', 'Quer viajar de avião mas não sabe por onde começar? Este guia te ensina a encontrar passagens baratas, acumular milhas e planejar sua primeira viagem com segurança e sem gastar além do necessário.', ['PDF + EPUB incluso', 'Estratégias de milhas', 'Alertas de promoção', 'Planejamento de roteiro', 'Acesso vitalício'], 'ebook', null)">
+    <div class="product-card" data-cat="ebooks" onclick="openModal('Do Zero à Primeira Passagem', 'R$ 20', 'Quer viajar de avião mas não sabe por onde começar? Este guia te ensina a encontrar passagens baratas, acumular milhas e planejar sua primeira viagem com segurança e sem gastar além do necessário.', ['Estratégias de milhas', 'Alertas de promoção', 'Planejamento de roteiro'], 'ebook', null)">
       <div class="product-thumb thumb-mkt">
         <div class="product-badge badge-ebook">Guia</div>
         ✈️
@@ -1371,13 +1442,13 @@
         <p class="product-desc">Aprenda a encontrar passagens baratas, acumular milhas e planejar sua primeira viagem de avião com confiança.</p>
         <div class="product-footer">
           <div class="product-price">R$ 20</div>
-          <button class="btn-buy" onclick="event.stopPropagation(); addToCartDirect('Do Zero à Primeira Passagem','R$ 20','O guia definitivo para comprar passagens baratas e planejar viagens.',['PDF + EPUB incluso','Estratégias de milhas','Alertas de promoção','Planejamento de roteiro','Acesso vitalício'],'ebook',null)">+ Carrinho</button>
+          <button class="btn-buy" onclick="event.stopPropagation(); addToCartDirect('Do Zero à Primeira Passagem','R$ 20','O guia definitivo para comprar passagens baratas e planejar viagens.',['Estratégias de milhas','Alertas de promoção','Planejamento de roteiro'],'ebook',null)">+ Carrinho</button>
         </div>
       </div>
     </div>
 
     <!-- Guia: Como Criar Hábitos que Grudam -->
-    <div class="product-card" data-cat="ebooks" onclick="openModal('Como Criar Hábitos que Grudam', 'R$ 20', 'Usando o método científico por trás da formação de hábitos, este guia te mostra como construir rotinas que realmente duram e identificar os padrões que estão te impedindo de evoluir.', ['PDF + EPUB incluso', 'Método baseado em ciência', 'Templates de acompanhamento', 'Exemplos práticos', 'Acesso vitalício'], 'ebook', null)">
+    <div class="product-card" data-cat="ebooks" onclick="openModal('Como Criar Hábitos que Grudam', 'R$ 20', 'Usando o método científico por trás da formação de hábitos, este guia te mostra como construir rotinas que realmente duram e identificar os padrões que estão te impedindo de evoluir.', ['Método baseado em ciência', 'Templates de acompanhamento', 'Exemplos práticos'], 'ebook', null)">
       <div class="product-thumb thumb-ebook">
         <div class="product-badge badge-ebook">Guia</div>
         🔗
@@ -1387,13 +1458,13 @@
         <p class="product-desc">O método científico para construir hábitos que realmente duram e eliminar os que estão te sabotando.</p>
         <div class="product-footer">
           <div class="product-price">R$ 20</div>
-          <button class="btn-buy" onclick="event.stopPropagation(); addToCartDirect('Como Criar Hábitos que Grudam','R$ 20','O método científico para criar hábitos duradouros e eliminar os que te travam.',['PDF + EPUB incluso','Método baseado em ciência','Templates de acompanhamento','Exemplos práticos','Acesso vitalício'],'ebook',null)">+ Carrinho</button>
+          <button class="btn-buy" onclick="event.stopPropagation(); addToCartDirect('Como Criar Hábitos que Grudam','R$ 20','O método científico para criar hábitos duradouros e eliminar os que te travam.',['Método baseado em ciência','Templates de acompanhamento','Exemplos práticos'],'ebook',null)">+ Carrinho</button>
         </div>
       </div>
     </div>
 
     <!-- Pacote: HabitPlan + Guia Hábitos -->
-    <div class="product-card" data-cat="pacotes" onclick="openModal('HabitPlan: Hábitos & Metas + Guia Hábitos', 'R$ 35', 'O combo perfeito para transformar seus hábitos de verdade: o guia te dá o método e o entendimento, o app coloca tudo em prática. Juntos, custam menos do que separados.', ['Guia Como Criar Hábitos que Grudam', 'App HabitPlan completo', 'Streaks e lembretes', 'Rastreamento diário', 'Acesso vitalício a tudo'], 'app', 'R$ 50')">
+    <div class="product-card" data-cat="pacotes" onclick="openModal('HabitPlan: Hábitos & Metas + Guia Hábitos', 'R$ 35', 'O combo perfeito para transformar seus hábitos de verdade: o guia te dá o método e o entendimento, o app coloca tudo em prática. Juntos, custam menos do que separados.', ['Guia Como Criar Hábitos que Grudam', 'App HabitPlan completo', 'Streaks e lembretes', 'Rastreamento diário'], 'app', 'R$ 50')">
       <div class="product-thumb" style="background: linear-gradient(135deg, #1a1040, #2a3a6c);">
         <div class="product-badge" style="background:rgba(255,215,0,0.2);color:#ffd700;border:1px solid rgba(255,215,0,0.4);">Pacote</div>
         🎁
@@ -1403,35 +1474,11 @@
         <p class="product-desc">O combo completo: o guia com o método na teoria + o app para colocar em prática. Melhor custo-benefício da loja.</p>
         <div class="product-footer">
           <div class="product-price"><span>R$ 50</span>R$ 35</div>
-          <button class="btn-buy" onclick="event.stopPropagation(); addToCartDirect('HabitPlan: Hábitos & Metas + Guia Hábitos','R$ 35','Combo completo: Guia Como Criar Hábitos que Grudam + App HabitPlan.',['Guia Como Criar Hábitos que Grudam','App HabitPlan completo','Streaks e lembretes','Rastreamento diário','Acesso vitalício a tudo'],'app','R$ 50')">+ Carrinho</button>
+          <button class="btn-buy" onclick="event.stopPropagation(); addToCartDirect('HabitPlan: Hábitos & Metas + Guia Hábitos','R$ 35','Combo completo: Guia Como Criar Hábitos que Grudam + App HabitPlan.',['Guia Como Criar Hábitos que Grudam','App HabitPlan completo','Streaks e lembretes','Rastreamento diário'],'app','R$ 50')">+ Carrinho</button>
         </div>
       </div>
     </div>
 
-  </div>
-</section>
-
-<!-- COMO FUNCIONA -->
-<section class="how-section" id="como-funciona">
-  <div style="max-width: 1200px; margin: 0 auto;">
-    <h2>Como funciona</h2>
-    <div class="steps-grid">
-      <div class="step">
-        <div class="step-num">1</div>
-        <div class="step-title">Escolha seu produto</div>
-        <p class="step-desc">Navegue pelo catálogo e encontre o produto digital ideal para você.</p>
-      </div>
-      <div class="step">
-        <div class="step-num">2</div>
-        <div class="step-title">Pagamento seguro</div>
-        <p class="step-desc">Pague via PIX, cartão de crédito ou boleto. Seguro e com confirmação rápida.</p>
-      </div>
-      <div class="step">
-        <div class="step-num">3</div>
-        <div class="step-title">Acesso imediato</div>
-        <p class="step-desc">Receba o link de download ou acesso no seu e-mail em segundos.</p>
-      </div>
-    </div>
   </div>
 </section>
 
@@ -1507,53 +1554,6 @@
       <button class="carousel-btn" onclick="carouselPrev()">‹</button>
       <div class="carousel-dots" id="carouselDots"></div>
       <button class="carousel-btn" onclick="carouselNext()">›</button>
-    </div>
-  </div>
-</section>
-
-<!-- QUEM SOMOS -->
-<section class="about-section" id="quem-somos">
-  <div class="about-inner">
-    <div class="about-text-col">
-      <span class="about-label">Nossa história</span>
-      <h2>Quem somos</h2>
-      <p>A <strong>InviseStore</strong> nasceu de uma frustração real: anos sem controle sobre dinheiro e sem conseguir manter um hábito por mais de duas semanas.</p>
-      <p>Testamos planilhas complicadas, apps cheios de função inútil, ebooks que eram 80% teoria e 20% prático. Nada funcionava.</p>
-      <p>Cada produto aqui foi criado a partir do que nós mesmos testamos, quebramos e reconstruímos até funcionar de verdade. Sem enrolação, sem promessa que não entrega.</p>
-      <div class="about-social">
-        <a href="https://instagram.com/invisestore" target="_blank" rel="noopener">📸 Instagram</a>
-        <a href="https://tiktok.com/@invise.store" target="_blank" rel="noopener">🎵 TikTok</a>
-      </div>
-    </div>
-    <div class="about-visual-col">
-      <div class="about-card">
-        <div class="about-card-icon">🔬</div>
-        <div>
-          <div class="about-card-title">Testado por nós primeiro</div>
-          <div class="about-card-desc">Nenhum produto vai pro ar sem ter sido usado e validado internamente por semanas.</div>
-        </div>
-      </div>
-      <div class="about-card">
-        <div class="about-card-icon">⚡</div>
-        <div>
-          <div class="about-card-title">Sem enrolação</div>
-          <div class="about-card-desc">Conteúdo direto ao ponto. Zero preenchimento, zero teoria inútil. Só o que funciona.</div>
-        </div>
-      </div>
-      <div class="about-card">
-        <div class="about-card-icon">🔒</div>
-        <div>
-          <div class="about-card-title">Acesso vitalício</div>
-          <div class="about-card-desc">Pague uma vez, use para sempre. Todas as atualizações inclusas sem custo adicional.</div>
-        </div>
-      </div>
-      <div class="about-card">
-        <div class="about-card-icon">💬</div>
-        <div>
-          <div class="about-card-title">Suporte real</div>
-          <div class="about-card-desc">Se tiver dúvida ou problema, tem alguém de verdade para responder — não um bot.</div>
-        </div>
-      </div>
     </div>
   </div>
 </section>
