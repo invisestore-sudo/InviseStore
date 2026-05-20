@@ -396,21 +396,20 @@
 
   .product-card {
     background: var(--card-bg);
-    border: 1px solid var(--border);
     border-radius: 20px;
     overflow: hidden;
-    transition: transform 0.25s, border-color 0.25s, box-shadow 0.25s;
+    box-shadow: 0 2px 16px rgba(0,0,0,0.28);
+    transition: transform 0.25s, box-shadow 0.25s;
     cursor: pointer;
   }
 
   .product-card:hover {
     transform: translateY(-4px);
-    border-color: rgba(108,99,255,0.3);
-    box-shadow: 0 20px 60px rgba(0,0,0,0.4);
+    box-shadow: 0 20px 60px rgba(0,0,0,0.5);
   }
 
   .product-thumb {
-    height: 180px;
+    height: 220px;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -419,23 +418,18 @@
     overflow: hidden;
   }
 
-  .product-thumb::after {
-    content: '';
-    position: absolute;
-    inset: 0;
-    background: linear-gradient(to bottom, transparent 50%, var(--card-bg) 100%);
-  }
-
   .product-thumb-cover {
     position: absolute;
     inset: 0;
     width: 100%;
     height: 100%;
-    object-fit: cover;
+    object-fit: contain;
+    object-position: center;
     z-index: 1;
   }
   .product-thumb-media .product-thumb-emoji { display: none; }
-  .product-thumb.ebook .product-thumb-cover { object-fit: contain; object-position: center; }
+  .product-thumb.product-thumb-media { background: #0b0b10; }
+  .product-thumb.product-thumb-media.ebook-light { background: #f2f3f5; }
 
   .media-carousel {
     position: relative;
@@ -1483,7 +1477,7 @@
 
     <!-- Guia: Dono do Seu Dinheiro -->
     <div class="product-card" data-cat="ebooks" onclick="openModal('Dono do Seu Dinheiro', 'R$ 25', 'Chega de mês acabando antes do salário. Este guia prático e direto te leva do endividamento ao primeiro investimento, com estratégias reais para quem quer mudar de vida financeira de vez.', [], 'ebook', null, 'dono-dinheiro')">
-      <div class="product-thumb thumb-finance product-thumb-media ebook">
+      <div class="product-thumb thumb-finance product-thumb-media">
         <div class="product-badge badge-ebook">Guia</div>
         <img src="assets/dono-dinheiro/1.jpg" alt="Dono do Seu Dinheiro" class="product-thumb-cover" onerror="this.remove(); this.parentNode.classList.remove('product-thumb-media');">
         <span class="product-thumb-emoji">💰</span>
@@ -1500,7 +1494,7 @@
 
     <!-- Guia: Ciência da Longevidade -->
     <div class="product-card" data-cat="ebooks" onclick="openModal('Ciência da Longevidade', 'R$ 20', 'Baseado em ciência, este guia explora os pilares de uma vida longa e saudável: como dormir melhor, se alimentar com inteligência, se exercitar com consistência e cuidar do seu bem-estar mental.', [], 'ebook', null, 'longevidade')">
-      <div class="product-thumb thumb-sheet product-thumb-media ebook">
+      <div class="product-thumb thumb-sheet product-thumb-media ebook-light">
         <div class="product-badge badge-ebook">Guia</div>
         <img src="assets/longevidade/1.jpg" alt="Ciência da Longevidade" class="product-thumb-cover" onerror="this.remove(); this.parentNode.classList.remove('product-thumb-media');">
         <span class="product-thumb-emoji">🧬</span>
@@ -1517,7 +1511,7 @@
 
     <!-- Guia: Do Zero à Primeira Passagem -->
     <div class="product-card" data-cat="ebooks" onclick="openModal('Do Zero à Primeira Passagem', 'R$ 20', 'Quer viajar de avião mas não sabe por onde começar? Este guia te ensina a encontrar passagens baratas, acumular milhas e planejar sua primeira viagem com segurança e sem gastar além do necessário.', [], 'ebook', null, 'passagem')">
-      <div class="product-thumb thumb-mkt product-thumb-media ebook">
+      <div class="product-thumb thumb-mkt product-thumb-media ebook-light">
         <div class="product-badge badge-ebook">Guia</div>
         <img src="assets/passagem/1.jpg" alt="Do Zero à Primeira Passagem" class="product-thumb-cover" onerror="this.remove(); this.parentNode.classList.remove('product-thumb-media');">
         <span class="product-thumb-emoji">✈️</span>
@@ -1534,7 +1528,7 @@
 
     <!-- Guia: Como Criar Hábitos que Grudam -->
     <div class="product-card" data-cat="ebooks" onclick="openModal('Como Criar Hábitos que Grudam', 'R$ 20', 'Usando o método científico por trás da formação de hábitos, este guia te mostra como construir rotinas que realmente duram e identificar os padrões que estão te impedindo de evoluir.', [], 'ebook', null, 'habitos-grudam')">
-      <div class="product-thumb thumb-ebook product-thumb-media ebook">
+      <div class="product-thumb thumb-ebook product-thumb-media ebook-light">
         <div class="product-badge badge-ebook">Guia</div>
         <img src="assets/habitos-grudam/1.jpg" alt="Como Criar Hábitos que Grudam" class="product-thumb-cover" onerror="this.remove(); this.parentNode.classList.remove('product-thumb-media');">
         <span class="product-thumb-emoji">🔗</span>
