@@ -428,8 +428,18 @@
     z-index: 1;
   }
   .product-thumb-media .product-thumb-emoji { display: none; }
-  .product-thumb.product-thumb-media { background: #0b0b10; }
-  .product-thumb.product-thumb-media.ebook-light { background: #f2f3f5; }
+  .product-thumb.product-thumb-media { background: #111; }
+  .thumb-blur-bg {
+    position: absolute;
+    inset: -10%;
+    z-index: 0;
+    background-size: cover;
+    background-position: center;
+    filter: blur(22px);
+    transform: scale(1.15);
+    opacity: 0.72;
+  }
+  .product-thumb-cover { z-index: 2; }
 
   .media-carousel {
     position: relative;
@@ -2634,6 +2644,19 @@ InviseStore — Guias & Apps`
   }
 
   renderCarouselDots();
+
+  document.querySelectorAll('.product-thumb-cover').forEach(img => {
+    const apply = () => {
+      const thumb = img.closest('.product-thumb');
+      if (!thumb || thumb.querySelector('.thumb-blur-bg')) return;
+      const blur = document.createElement('div');
+      blur.className = 'thumb-blur-bg';
+      blur.style.backgroundImage = `url('${img.src}')`;
+      thumb.insertBefore(blur, thumb.firstChild);
+    };
+    if (img.complete) apply();
+    else img.addEventListener('load', apply);
+  });
 </script>
 
 </body>
