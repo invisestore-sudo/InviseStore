@@ -513,6 +513,55 @@
     transition: background 0.2s, transform 0.2s;
   }
   .thumb-cdot.active { background: #fff; transform: scale(1.3); }
+  .thumb-carousel-slide video {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+    display: block;
+  }
+  .thumb-video-max {
+    position: absolute;
+    bottom: 10px;
+    right: 10px;
+    width: 30px;
+    height: 30px;
+    border-radius: 8px;
+    background: rgba(0,0,0,0.55);
+    backdrop-filter: blur(6px);
+    color: #fff;
+    border: none;
+    cursor: pointer;
+    z-index: 6;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    opacity: 0.7;
+    transition: opacity 0.2s, transform 0.15s;
+  }
+  .thumb-video-max:hover { opacity: 1; transform: scale(1.1); }
+  .thumb-video-play {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 44px;
+    height: 44px;
+    border-radius: 50%;
+    background: rgba(0,0,0,0.55);
+    backdrop-filter: blur(6px);
+    color: #fff;
+    border: none;
+    cursor: pointer;
+    z-index: 6;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 20px;
+    opacity: 0;
+    transition: opacity 0.2s;
+    pointer-events: none;
+  }
+  .thumb-carousel-slide.video-paused .thumb-video-play { opacity: 1; pointer-events: auto; }
 
   .media-carousel {
     position: relative;
@@ -2721,22 +2770,22 @@ InviseStore — Guias & Apps`
   function initThumbCarousels() {
     document.querySelectorAll('.product-thumb[data-key]').forEach(thumb => {
       const key = thumb.dataset.key;
-      const media = (productMedia[key] || []).filter(m => m.type === 'image');
-      if (!media.length) return;
+      const allMedia = productMedia[key] || [];
+      if (!allMedia.length) return;
 
       const existingImg = thumb.querySelector('.product-thumb-cover');
       if (existingImg) existingImg.remove();
 
-      // blur background
+      const firstImg = allMedia.find(m => m.type === 'image');
       const blurBg = document.createElement('div');
       blurBg.className = 'thumb-blur-bg';
-      blurBg.style.backgroundImage = `url('${media[0].src}')`;
+      if (firstImg) blurBg.style.backgroundImage = `url('${firstImg.src}')`;
       thumb.insertBefore(blurBg, thumb.firstChild);
 
-      if (media.length === 1) {
+      if (allMedia.length === 1 && allMedia[0].type === 'image') {
         const img = document.createElement('img');
-        img.src = media[0].src;
-        img.alt = media[0].alt || '';
+        img.src = allMedia[0].src;
+        img.alt = allMedia[0].alt || '';
         img.className = 'product-thumb-cover';
         thumb.appendChild(img);
         return;
@@ -2748,14 +2797,49 @@ InviseStore — Guias & Apps`
 
       const track = document.createElement('div');
       track.className = 'thumb-carousel-track';
-      media.forEach((m, i) => {
+
+      allMedia.forEach((m, i) => {
         const slide = document.createElement('div');
         slide.className = 'thumb-carousel-slide';
-        const img = document.createElement('img');
-        img.src = m.src;
-        img.alt = m.alt || '';
-        img.loading = i === 0 ? 'eager' : 'lazy';
-        slide.appendChild(img);
+
+        if (m.type === 'video') {
+          slide.classList.add('video-paused');
+          const video = document.createElement('video');
+          video.src = m.src;
+          video.muted = true;
+          video.playsInline = true;
+          video.loop = true;
+          video.preload = 'metadata';
+          video.onclick = e => e.stopPropagation();
+          video.addEventListener('play',  () => slide.classList.remove('video-paused'));
+          video.addEventListener('pause', () => slide.classList.add('video-paused'));
+
+          const playBtn = document.createElement('button');
+          playBtn.className = 'thumb-video-play';
+          playBtn.innerHTML = '▶';
+          playBtn.setAttribute('aria-label', 'Reproduzir');
+          playBtn.onclick = e => { e.stopPropagation(); video.play(); };
+
+          const maxBtn = document.createElement('button');
+          maxBtn.className = 'thumb-video-max';
+          maxBtn.innerHTML = '<svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M1 5V1h4M9 1h4v4M13 9v4H9M5 13H1V9" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+          maxBtn.setAttribute('aria-label', 'Tela cheia');
+          maxBtn.onclick = e => {
+            e.stopPropagation();
+            const fn = video.requestFullscreen || video.webkitRequestFullscreen || video.mozRequestFullScreen;
+            if (fn) fn.call(video);
+          };
+
+          slide.appendChild(video);
+          slide.appendChild(playBtn);
+          slide.appendChild(maxBtn);
+        } else {
+          const img = document.createElement('img');
+          img.src = m.src;
+          img.alt = m.alt || '';
+          img.loading = i === 0 ? 'eager' : 'lazy';
+          slide.appendChild(img);
+        }
         track.appendChild(slide);
       });
       carousel.appendChild(track);
@@ -2774,7 +2858,7 @@ InviseStore — Guias & Apps`
 
       const dotsEl = document.createElement('div');
       dotsEl.className = 'thumb-cdots';
-      media.forEach((_, i) => {
+      allMedia.forEach((m, i) => {
         const dot = document.createElement('button');
         dot.className = 'thumb-cdot' + (i === 0 ? ' active' : '');
         dot.setAttribute('aria-label', `Slide ${i + 1}`);
@@ -2788,13 +2872,21 @@ InviseStore — Guias & Apps`
       thumb.appendChild(carousel);
 
       function go(n) {
-        idx = (n + media.length) % media.length;
+        const prevVideo = track.children[idx] && track.children[idx].querySelector('video');
+        if (prevVideo) prevVideo.pause();
+
+        idx = (n + allMedia.length) % allMedia.length;
         track.style.transform = `translateX(-${idx * 100}%)`;
-        blurBg.style.backgroundImage = `url('${media[idx].src}')`;
+
+        const m = allMedia[idx];
+        if (m.type === 'image') blurBg.style.backgroundImage = `url('${m.src}')`;
+
         dotsEl.querySelectorAll('.thumb-cdot').forEach((d, i) => d.classList.toggle('active', i === idx));
+
+        const newVideo = track.children[idx] && track.children[idx].querySelector('video');
+        if (newVideo) newVideo.play().catch(() => {});
       }
 
-      // touch swipe
       let tx = 0;
       carousel.addEventListener('touchstart', e => { tx = e.touches[0].clientX; }, { passive: true });
       carousel.addEventListener('touchend', e => {
@@ -2803,7 +2895,6 @@ InviseStore — Guias & Apps`
       }, { passive: true });
     });
 
-    // blur bg for thumbs without data-key
     document.querySelectorAll('.product-thumb-cover').forEach(img => {
       const apply = () => {
         const thumb = img.closest('.product-thumb');
