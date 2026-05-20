@@ -441,6 +441,79 @@
   }
   .product-thumb-cover { z-index: 2; }
 
+  .thumb-carousel {
+    position: absolute;
+    inset: 0;
+    z-index: 2;
+    overflow: hidden;
+  }
+  .thumb-carousel-track {
+    display: flex;
+    width: 100%;
+    height: 100%;
+    transition: transform 0.32s cubic-bezier(.4,0,.2,1);
+    will-change: transform;
+  }
+  .thumb-carousel-slide {
+    flex: 0 0 100%;
+    width: 100%;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .thumb-carousel-slide img {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+    display: block;
+  }
+  .thumb-nav {
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 30px;
+    height: 30px;
+    border-radius: 50%;
+    background: rgba(0,0,0,0.52);
+    backdrop-filter: blur(4px);
+    color: #fff;
+    border: none;
+    font-size: 18px;
+    line-height: 1;
+    cursor: pointer;
+    z-index: 5;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    opacity: 0;
+    transition: opacity 0.2s;
+    padding: 0;
+  }
+  .product-thumb:hover .thumb-nav { opacity: 1; }
+  .thumb-prev { left: 8px; }
+  .thumb-next { right: 8px; }
+  .thumb-cdots {
+    position: absolute;
+    bottom: 8px;
+    left: 50%;
+    transform: translateX(-50%);
+    display: flex;
+    gap: 5px;
+    z-index: 5;
+  }
+  .thumb-cdot {
+    width: 5px;
+    height: 5px;
+    border-radius: 50%;
+    background: rgba(255,255,255,0.35);
+    border: none;
+    padding: 0;
+    cursor: pointer;
+    transition: background 0.2s, transform 0.2s;
+  }
+  .thumb-cdot.active { background: #fff; transform: scale(1.3); }
+
   .media-carousel {
     position: relative;
     width: 100%;
@@ -1453,7 +1526,7 @@
 
     <!-- App: FinanPro -->
     <div class="product-card" data-cat="apps" onclick="openModal('FinanPro: Controle de Gastos', 'R$ 30', 'App completo para organizar suas finanças do jeito certo. Registre receitas, controle despesas, defina metas e acompanhe tudo por relatórios automáticos — tudo em um só lugar, sem complicação.', [], 'app', null, 'finanpro')">
-      <div class="product-thumb thumb-finance product-thumb-media">
+      <div class="product-thumb thumb-finance product-thumb-media" data-key="finanpro">
         <div class="product-badge badge-app">App</div>
         <img src="assets/finanpro/1.jpg" alt="FinanPro" class="product-thumb-cover" onerror="this.remove(); this.parentNode.classList.remove('product-thumb-media');">
         <span class="product-thumb-emoji">📊</span>
@@ -1470,7 +1543,7 @@
 
     <!-- App: HabitPlan -->
     <div class="product-card" data-cat="apps" onclick="openModal('HabitPlan: Hábitos & Metas', 'R$ 30', 'App completo para quem quer levar seus hábitos a sério. Planeje metas, mantenha streaks, receba lembretes no momento certo e visualize seu progresso com relatórios detalhados.', [], 'app', null, 'habitplan')">
-      <div class="product-thumb thumb-design product-thumb-media">
+      <div class="product-thumb thumb-design product-thumb-media" data-key="habitplan">
         <div class="product-badge badge-app">App</div>
         <img src="assets/habitplan/1.jpg" alt="HabitPlan" class="product-thumb-cover" onerror="this.remove(); this.parentNode.classList.remove('product-thumb-media');">
         <span class="product-thumb-emoji">📅</span>
@@ -2645,18 +2718,106 @@ InviseStore — Guias & Apps`
 
   renderCarouselDots();
 
-  document.querySelectorAll('.product-thumb-cover').forEach(img => {
-    const apply = () => {
-      const thumb = img.closest('.product-thumb');
-      if (!thumb || thumb.querySelector('.thumb-blur-bg')) return;
-      const blur = document.createElement('div');
-      blur.className = 'thumb-blur-bg';
-      blur.style.backgroundImage = `url('${img.src}')`;
-      thumb.insertBefore(blur, thumb.firstChild);
-    };
-    if (img.complete) apply();
-    else img.addEventListener('load', apply);
-  });
+  function initThumbCarousels() {
+    document.querySelectorAll('.product-thumb[data-key]').forEach(thumb => {
+      const key = thumb.dataset.key;
+      const media = (productMedia[key] || []).filter(m => m.type === 'image');
+      if (!media.length) return;
+
+      const existingImg = thumb.querySelector('.product-thumb-cover');
+      if (existingImg) existingImg.remove();
+
+      // blur background
+      const blurBg = document.createElement('div');
+      blurBg.className = 'thumb-blur-bg';
+      blurBg.style.backgroundImage = `url('${media[0].src}')`;
+      thumb.insertBefore(blurBg, thumb.firstChild);
+
+      if (media.length === 1) {
+        const img = document.createElement('img');
+        img.src = media[0].src;
+        img.alt = media[0].alt || '';
+        img.className = 'product-thumb-cover';
+        thumb.appendChild(img);
+        return;
+      }
+
+      let idx = 0;
+      const carousel = document.createElement('div');
+      carousel.className = 'thumb-carousel';
+
+      const track = document.createElement('div');
+      track.className = 'thumb-carousel-track';
+      media.forEach((m, i) => {
+        const slide = document.createElement('div');
+        slide.className = 'thumb-carousel-slide';
+        const img = document.createElement('img');
+        img.src = m.src;
+        img.alt = m.alt || '';
+        img.loading = i === 0 ? 'eager' : 'lazy';
+        slide.appendChild(img);
+        track.appendChild(slide);
+      });
+      carousel.appendChild(track);
+
+      const prev = document.createElement('button');
+      prev.className = 'thumb-nav thumb-prev';
+      prev.innerHTML = '‹';
+      prev.setAttribute('aria-label', 'Anterior');
+      prev.onclick = e => { e.stopPropagation(); go(idx - 1); };
+
+      const next = document.createElement('button');
+      next.className = 'thumb-nav thumb-next';
+      next.innerHTML = '›';
+      next.setAttribute('aria-label', 'Próximo');
+      next.onclick = e => { e.stopPropagation(); go(idx + 1); };
+
+      const dotsEl = document.createElement('div');
+      dotsEl.className = 'thumb-cdots';
+      media.forEach((_, i) => {
+        const dot = document.createElement('button');
+        dot.className = 'thumb-cdot' + (i === 0 ? ' active' : '');
+        dot.setAttribute('aria-label', `Slide ${i + 1}`);
+        dot.onclick = e => { e.stopPropagation(); go(i); };
+        dotsEl.appendChild(dot);
+      });
+
+      carousel.appendChild(prev);
+      carousel.appendChild(next);
+      carousel.appendChild(dotsEl);
+      thumb.appendChild(carousel);
+
+      function go(n) {
+        idx = (n + media.length) % media.length;
+        track.style.transform = `translateX(-${idx * 100}%)`;
+        blurBg.style.backgroundImage = `url('${media[idx].src}')`;
+        dotsEl.querySelectorAll('.thumb-cdot').forEach((d, i) => d.classList.toggle('active', i === idx));
+      }
+
+      // touch swipe
+      let tx = 0;
+      carousel.addEventListener('touchstart', e => { tx = e.touches[0].clientX; }, { passive: true });
+      carousel.addEventListener('touchend', e => {
+        const dx = e.changedTouches[0].clientX - tx;
+        if (Math.abs(dx) > 35) go(idx + (dx < 0 ? 1 : -1));
+      }, { passive: true });
+    });
+
+    // blur bg for thumbs without data-key
+    document.querySelectorAll('.product-thumb-cover').forEach(img => {
+      const apply = () => {
+        const thumb = img.closest('.product-thumb');
+        if (!thumb || thumb.querySelector('.thumb-blur-bg')) return;
+        const blur = document.createElement('div');
+        blur.className = 'thumb-blur-bg';
+        blur.style.backgroundImage = `url('${img.src}')`;
+        thumb.insertBefore(blur, thumb.firstChild);
+      };
+      if (img.complete) apply(); else img.addEventListener('load', apply);
+    });
+  }
+
+  initThumbCarousels();
 </script>
 
 </body>
