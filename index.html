@@ -2366,6 +2366,12 @@
     //    este pedido (external_reference). Assim o pagamento conecta sozinho ao
     //    pedido certo e o cliente volta para as telas de retorno do site.
     //    Se o backend falhar, cai no link fixo como reserva (não bloqueia a venda).
+
+    // Trava contra clique duplo + tela de "aguarde" (o servidor pode demorar a acordar)
+    if (window.__pagamentoEmAndamento) return;
+    window.__pagamentoEmAndamento = true;
+    mostrarOverlayPagamento();
+
     const usarLinkFixo = () => {
       enviarPedidoParaBackend(order);   // garante o registro do pedido
       window.location.href = paymentLink;
@@ -2397,6 +2403,19 @@
   // Ex: 'https://invisestore-backend.onrender.com'
   // ============================================================
   const BACKEND_URL = window.INVISE_API || 'https://invisestore-backend.onrender.com';
+
+  // Mostra uma tela de "aguarde" enquanto o checkout é criado (evita o usuário
+  // achar que travou e clicar de novo, criando um segundo pedido).
+  function mostrarOverlayPagamento() {
+    if (document.getElementById('pagamento-overlay')) return;
+    const ov = document.createElement('div');
+    ov.id = 'pagamento-overlay';
+    ov.style.cssText = 'position:fixed;inset:0;z-index:99999;background:rgba(10,10,15,.93);display:flex;flex-direction:column;align-items:center;justify-content:center;color:#fff;font-family:system-ui,-apple-system,sans-serif;text-align:center;padding:24px;';
+    ov.innerHTML = '<div style="width:46px;height:46px;border:4px solid rgba(255,255,255,.2);border-top-color:#6c63ff;border-radius:50%;animation:invspin 1s linear infinite;"></div>'
+      + '<p style="margin-top:18px;font-size:16px;max-width:340px;">Redirecionando para o pagamento seguro…<br><small style="color:#9090a0;">Aguarde alguns segundos, não feche a página.</small></p>'
+      + '<style>@keyframes invspin{to{transform:rotate(360deg)}}</style>';
+    document.body.appendChild(ov);
+  }
 
   function enviarPedidoParaBackend(order) {
     // Tenta enviar para o backend, mas não bloqueia o fluxo se falhar
