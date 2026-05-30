@@ -1675,8 +1675,8 @@
         <div class="product-name">TESTE</div>
         <p class="product-desc">Produto de teste para validação do fluxo de compra e integração com o Mercado Pago.</p>
         <div class="product-footer">
-          <div class="product-price">R$ 0</div>
-          <button class="btn-buy" onclick="event.stopPropagation(); addToCartDirect('TESTE','R$ 0','Produto de teste.',[],'app',null)">+ Carrinho</button>
+          <div class="product-price">R$ 0,02</div>
+          <button class="btn-buy" onclick="event.stopPropagation(); addToCartDirect('TESTE','R$ 0,02','Produto de teste.',[],'app',null)">+ Carrinho</button>
         </div>
       </div>
     </div>
@@ -2355,18 +2355,39 @@
     orders.unshift(order);
     localStorage.setItem('invisestore_orders', JSON.stringify(orders));
 
-    // 4) Envia os dados do pedido para o seu backend.
-    // Configure abaixo a URL do seu backend para registrar os clientes.
-    // Se o backend estiver offline ou não configurado, o fluxo continua normalmente.
-    enviarPedidoParaBackend(order);
+    // 4) Monta os itens com os preços reais (aceita "R$ 0,02" e "R$ 30")
+    const items = cart.map(p => ({
+      title: p.title,
+      quantity: 1,
+      price: parseFloat(String(p.price).replace('R$', '').replace(',', '.').trim()) || 0
+    }));
 
-    // 5) Dispara o envio simulado dos produtos para o email do cliente.
-    // Em produção, isto seria feito pelo backend após o webhook de pagamento aprovado
-    // do Mercado Pago. Aqui simulamos para que o fluxo completo possa ser testado.
-    enviarProdutosPorEmail(order);
+    // 5) Pede ao backend para criar o checkout do Mercado Pago já amarrado a
+    //    este pedido (external_reference). Assim o pagamento conecta sozinho ao
+    //    pedido certo e o cliente volta para as telas de retorno do site.
+    //    Se o backend falhar, cai no link fixo como reserva (não bloqueia a venda).
+    const usarLinkFixo = () => {
+      enviarPedidoParaBackend(order);   // garante o registro do pedido
+      window.location.href = paymentLink;
+    };
 
-    // 6) Abre o checkout do Mercado Pago em uma nova aba
-    window.open(paymentLink, '_blank');
+    fetch(BACKEND_URL + '/api/checkout', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ id: order.id, name, email, phone, items, paymentMethod: methodLabel })
+    })
+      .then(r => r.ok ? r.json() : Promise.reject(new Error('checkout ' + r.status)))
+      .then(data => {
+        if (data && data.init_point) {
+          window.location.href = data.init_point;   // vai para o Mercado Pago
+        } else {
+          usarLinkFixo();
+        }
+      })
+      .catch(err => {
+        console.warn('⚠️ Checkout pelo backend falhou, usando link fixo:', err.message);
+        usarLinkFixo();
+      });
   }
 
   // ============================================================
