@@ -2110,28 +2110,43 @@
       { type: 'video', src: 'assets/habitplan/video.mp4' }
     ],
     'dono-dinheiro': [
-      { type: 'image', src: 'assets/dono-dinheiro/1.jpg', alt: 'Dono do Seu Dinheiro' }
+      { type: 'image', src: 'assets/dono-dinheiro/1.jpg', alt: 'Dono do Seu Dinheiro' },
+      { type: 'video', src: 'assets/dono-dinheiro/video.mp4' }
     ],
     longevidade: [
-      { type: 'image', src: 'assets/longevidade/1.jpg', alt: 'Ciência da Longevidade' }
+      { type: 'image', src: 'assets/longevidade/1.jpg', alt: 'Ciência da Longevidade' },
+      { type: 'video', src: 'assets/longevidade/video.mp4' }
     ],
     passagem: [
-      { type: 'image', src: 'assets/passagem/1.jpg', alt: 'Do Zero à Primeira Passagem' }
+      { type: 'image', src: 'assets/passagem/1.jpg', alt: 'Do Zero à Primeira Passagem' },
+      { type: 'video', src: 'assets/passagem/video.mp4' }
     ],
     'habitos-grudam': [
-      { type: 'image', src: 'assets/habitos-grudam/1.jpg', alt: 'A Fórmula da Consistência' }
+      { type: 'image', src: 'assets/habitos-grudam/1.jpg', alt: 'A Fórmula da Consistência' },
+      { type: 'video', src: 'assets/habitos-grudam/video.mp4' }
     ]
   };
 
   let modalMediaIndex = 0;
   let modalMediaItems = [];
 
+  function _handleModalVideoError(videoEl) {
+    const slide = videoEl.closest('.media-slide');
+    if (!slide) return;
+    const slides = Array.from(document.querySelectorAll('#modalMediaTrack .media-slide'));
+    const slideIdx = slides.indexOf(slide);
+    if (slideIdx === -1) return;
+    modalMediaItems.splice(slideIdx, 1);
+    if (modalMediaIndex >= modalMediaItems.length) modalMediaIndex = Math.max(0, modalMediaItems.length - 1);
+    renderModalMedia();
+  }
+
   function renderModalMedia() {
     const track = document.getElementById('modalMediaTrack');
     const dots  = document.getElementById('modalMediaDots');
     track.innerHTML = modalMediaItems.map((m, i) => {
       if (m.type === 'video') {
-        return `<div class="media-slide"><video src="${m.src}" controls playsinline preload="metadata"></video></div>`;
+        return `<div class="media-slide"><video src="${m.src}" controls playsinline preload="metadata" onerror="_handleModalVideoError(this)"></video></div>`;
       }
       const fallback = `<div class=\\'media-placeholder\\'>Slot ${i+1}</div>`;
       return `<div class="media-slide"><img src="${m.src}" alt="${m.alt || ''}" loading="lazy" onerror="this.outerHTML='${fallback}'"></div>`;
@@ -2832,6 +2847,22 @@ InviseStore — Guias & Apps`
           video.onclick = e => e.stopPropagation();
           video.addEventListener('play',  () => slide.classList.remove('video-paused'));
           video.addEventListener('pause', () => slide.classList.add('video-paused'));
+          video.addEventListener('error', () => {
+            const slideIdx = Array.from(track.children).indexOf(slide);
+            if (slideIdx === -1) return;
+            allMedia.splice(slideIdx, 1);
+            slide.remove();
+            const dots = dotsEl.querySelectorAll('.thumb-cdot');
+            if (dots[slideIdx]) dots[slideIdx].remove();
+            if (allMedia.length <= 1) {
+              if (allMedia.length === 1 && allMedia[0].type === 'image') {
+                track.style.transform = 'translateX(0)';
+              }
+            } else {
+              idx = Math.min(idx, allMedia.length - 1);
+              track.style.transform = `translateX(-${idx * 100}%)`;
+            }
+          });
 
           const playBtn = document.createElement('button');
           playBtn.className = 'thumb-video-play';
