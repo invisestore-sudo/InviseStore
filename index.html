@@ -589,12 +589,18 @@
     background: var(--surface2);
     overflow: hidden;
   }
-  .media-slide img,
-  .media-slide video {
+  .media-slide img {
     width: 100%;
     height: 100%;
     object-fit: cover;
     display: block;
+  }
+  .media-slide video {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+    display: block;
+    background: #000;
   }
   .media-nav {
     position: absolute;
@@ -611,7 +617,7 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    z-index: 2;
+    z-index: 6;
   }
   .media-nav:hover { background: rgba(0,0,0,0.8); }
   .media-prev { left: 10px; }
@@ -623,7 +629,7 @@
     transform: translateX(-50%);
     display: flex;
     gap: 6px;
-    z-index: 2;
+    z-index: 6;
   }
   .media-dot {
     width: 8px;
@@ -2091,7 +2097,7 @@
       { type: 'image', src: 'assets/finanpro/3.jpg', alt: 'FinanPro — Simples por fora. Poderoso por dentro.' },
       { type: 'image', src: 'assets/finanpro/4.jpg', alt: 'FinanPro — Controle total. Resultados reais.' },
       { type: 'image', src: 'assets/finanpro/5.jpg', alt: 'FinanPro — Planeje melhor. Evolua todos os dias.' },
-      { type: 'video', src: 'assets/finanpro/video2.mp4' },
+      { type: 'video', src: 'assets/finanpro/video2.mp4', aspect: '16 / 9' },
       { type: 'video', src: 'assets/finanpro/video.mp4' }
     ],
     habitplan: [
@@ -2148,6 +2154,13 @@
       `<button type="button" class="media-dot${i === modalMediaIndex ? ' active' : ''}" onclick="modalMediaGo(${i})" aria-label="Slide ${i+1}"></button>`
     ).join('');
     track.style.transform = `translateX(-${modalMediaIndex * 100}%)`;
+    applyModalAspect();
+  }
+
+  // Ajusta a proporção do carrossel ao slide atual (ex.: vídeo horizontal 16/9)
+  function applyModalAspect() {
+    const m = modalMediaItems[modalMediaIndex];
+    document.getElementById('modalMedia').style.aspectRatio = (m && m.aspect) ? m.aspect : '3 / 4';
   }
 
   function modalMediaGo(i) {
@@ -2161,6 +2174,7 @@
     document.querySelectorAll('#modalMediaDots .media-dot').forEach((d, idx) => {
       d.classList.toggle('active', idx === modalMediaIndex);
     });
+    applyModalAspect();
   }
   function modalMediaNext() { modalMediaGo(modalMediaIndex + 1); }
   function modalMediaPrev() { modalMediaGo(modalMediaIndex - 1); }
@@ -2840,7 +2854,6 @@ InviseStore — Guias & Apps`
           video.playsInline = true;
           video.loop = true;
           video.preload = 'metadata';
-          video.onclick = e => e.stopPropagation();
           video.addEventListener('play',  () => slide.classList.remove('video-paused'));
           video.addEventListener('pause', () => slide.classList.add('video-paused'));
           video.addEventListener('error', () => {
@@ -2860,25 +2873,16 @@ InviseStore — Guias & Apps`
             }
           });
 
+          // ▶ apenas visual — não captura cliques, então o clique sobe para o
+          // card e abre o modal (onde o vídeo tem controles completos)
           const playBtn = document.createElement('button');
           playBtn.className = 'thumb-video-play';
           playBtn.innerHTML = '▶';
-          playBtn.setAttribute('aria-label', 'Reproduzir');
-          playBtn.onclick = e => { e.stopPropagation(); video.play(); };
-
-          const maxBtn = document.createElement('button');
-          maxBtn.className = 'thumb-video-max';
-          maxBtn.innerHTML = '<svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M1 5V1h4M9 1h4v4M13 9v4H9M5 13H1V9" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>';
-          maxBtn.setAttribute('aria-label', 'Tela cheia');
-          maxBtn.onclick = e => {
-            e.stopPropagation();
-            const fn = video.requestFullscreen || video.webkitRequestFullscreen || video.mozRequestFullScreen;
-            if (fn) fn.call(video);
-          };
+          playBtn.setAttribute('aria-label', 'Abrir vídeo');
+          playBtn.style.pointerEvents = 'none';
 
           slide.appendChild(video);
           slide.appendChild(playBtn);
-          slide.appendChild(maxBtn);
         } else if (m.type === 'drive') {
           const iframe = document.createElement('iframe');
           iframe.src = `https://drive.google.com/file/d/${m.id}/preview`;
@@ -2966,6 +2970,20 @@ InviseStore — Guias & Apps`
       if (img.complete) apply(); else img.addEventListener('load', apply);
     });
   }
+
+  // Swipe horizontal no carrossel do modal (permite navegar a partir de
+  // qualquer slide, inclusive vídeos, no celular)
+  (function () {
+    const mc = document.getElementById('modalMedia');
+    if (!mc) return;
+    let sx = 0, sy = 0;
+    mc.addEventListener('touchstart', e => { sx = e.touches[0].clientX; sy = e.touches[0].clientY; }, { passive: true });
+    mc.addEventListener('touchend', e => {
+      const dx = e.changedTouches[0].clientX - sx;
+      const dy = e.changedTouches[0].clientY - sy;
+      if (Math.abs(dx) > 40 && Math.abs(dx) > Math.abs(dy)) modalMediaGo(modalMediaIndex + (dx < 0 ? 1 : -1));
+    }, { passive: true });
+  })();
 
   initThumbCarousels();
 </script>
