@@ -2145,7 +2145,7 @@
     const dots  = document.getElementById('modalMediaDots');
     track.innerHTML = modalMediaItems.map((m, i) => {
       if (m.type === 'drive') {
-        return `<div class="media-slide"><iframe src="https://drive.google.com/file/d/${m.id}/preview" allow="autoplay; fullscreen" allowfullscreen loading="lazy" style="width:100%;height:100%;border:0;"></iframe></div>`;
+        return `<div class="media-slide"><div style="position:relative;width:100%;height:100%;overflow:hidden;"><iframe src="https://drive.google.com/file/d/${m.id}/preview" allow="autoplay; fullscreen" allowfullscreen loading="lazy" style="position:absolute;top:-42px;left:0;width:100%;height:calc(100% + 42px);border:0;"></iframe></div></div>`;
       }
       if (m.type === 'video') {
         return `<div class="media-slide"><video src="${m.src}" controls playsinline preload="metadata" onerror="_handleModalVideoError(this)"></video></div>`;
@@ -2894,8 +2894,11 @@ InviseStore — Guias & Apps`
           iframe.setAttribute('allow', 'autoplay; fullscreen');
           iframe.setAttribute('allowfullscreen', '');
           iframe.loading = 'lazy';
-          iframe.style.cssText = 'width:100%;height:100%;border:0;';
-          slide.appendChild(iframe);
+          const driveWrap = document.createElement('div');
+          driveWrap.style.cssText = 'position:relative;width:100%;height:100%;overflow:hidden;';
+          iframe.style.cssText = 'position:absolute;top:-42px;left:0;width:100%;height:calc(100% + 42px);border:0;';
+          driveWrap.appendChild(iframe);
+          slide.appendChild(driveWrap);
         } else {
           const img = document.createElement('img');
           img.src = m.src;
