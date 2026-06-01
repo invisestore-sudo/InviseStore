@@ -2111,19 +2111,18 @@
     ],
     'dono-dinheiro': [
       { type: 'image', src: 'assets/dono-dinheiro/1.jpg', alt: 'Dono do Seu Dinheiro' },
-      { type: 'video', src: 'assets/dono-dinheiro/video.mp4' }
+      { type: 'drive', id: '1iGdRRm8NhyIdsXc7S51P5N6Es8BoALIT' }
     ],
     longevidade: [
       { type: 'image', src: 'assets/longevidade/1.jpg', alt: 'Ciência da Longevidade' },
-      { type: 'video', src: 'assets/longevidade/video.mp4' }
+      { type: 'drive', id: '1gg48_PsTIAEbUvhrVoq6L0EKUXo281px' }
     ],
     passagem: [
       { type: 'image', src: 'assets/passagem/1.jpg', alt: 'Do Zero à Primeira Passagem' },
-      { type: 'video', src: 'assets/passagem/video.mp4' }
+      { type: 'drive', id: '1QG-SHLQGXHaaJ7EAJ8YWpkYwKvx82pRS' }
     ],
     'habitos-grudam': [
-      { type: 'image', src: 'assets/habitos-grudam/1.jpg', alt: 'A Fórmula da Consistência' },
-      { type: 'video', src: 'assets/habitos-grudam/video.mp4' }
+      { type: 'image', src: 'assets/habitos-grudam/1.jpg', alt: 'A Fórmula da Consistência' }
     ]
   };
 
@@ -2145,6 +2144,9 @@
     const track = document.getElementById('modalMediaTrack');
     const dots  = document.getElementById('modalMediaDots');
     track.innerHTML = modalMediaItems.map((m, i) => {
+      if (m.type === 'drive') {
+        return `<div class="media-slide"><iframe src="https://drive.google.com/file/d/${m.id}/preview" allow="autoplay; fullscreen" allowfullscreen loading="lazy" style="width:100%;height:100%;border:0;"></iframe></div>`;
+      }
       if (m.type === 'video') {
         return `<div class="media-slide"><video src="${m.src}" controls playsinline preload="metadata" onerror="_handleModalVideoError(this)"></video></div>`;
       }
@@ -2161,6 +2163,8 @@
     if (!modalMediaItems.length) return;
     // pause any playing video when leaving slide
     document.querySelectorAll('#modalMediaTrack video').forEach(v => v.pause());
+    // stop any playing Drive embed (reload iframe to halt audio)
+    document.querySelectorAll('#modalMediaTrack iframe').forEach(f => { f.src = f.src; });
     modalMediaIndex = (i + modalMediaItems.length) % modalMediaItems.length;
     document.getElementById('modalMediaTrack').style.transform = `translateX(-${modalMediaIndex * 100}%)`;
     document.querySelectorAll('#modalMediaDots .media-dot').forEach((d, idx) => {
@@ -2203,6 +2207,7 @@
 
   function closeModalBtn() {
     document.querySelectorAll('#modalMediaTrack video').forEach(v => v.pause());
+    document.querySelectorAll('#modalMediaTrack iframe').forEach(f => { f.src = 'about:blank'; });
     document.getElementById('modalOverlay').classList.remove('open');
   }
 
@@ -2883,6 +2888,14 @@ InviseStore — Guias & Apps`
           slide.appendChild(video);
           slide.appendChild(playBtn);
           slide.appendChild(maxBtn);
+        } else if (m.type === 'drive') {
+          const iframe = document.createElement('iframe');
+          iframe.src = `https://drive.google.com/file/d/${m.id}/preview`;
+          iframe.setAttribute('allow', 'autoplay; fullscreen');
+          iframe.setAttribute('allowfullscreen', '');
+          iframe.loading = 'lazy';
+          iframe.style.cssText = 'width:100%;height:100%;border:0;';
+          slide.appendChild(iframe);
         } else {
           const img = document.createElement('img');
           img.src = m.src;
@@ -2924,6 +2937,8 @@ InviseStore — Guias & Apps`
       function go(n) {
         const prevVideo = track.children[idx] && track.children[idx].querySelector('video');
         if (prevVideo) prevVideo.pause();
+        const prevFrame = track.children[idx] && track.children[idx].querySelector('iframe');
+        if (prevFrame) prevFrame.src = prevFrame.src;
 
         idx = (n + allMedia.length) % allMedia.length;
         track.style.transform = `translateX(-${idx * 100}%)`;
